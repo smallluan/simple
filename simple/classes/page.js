@@ -5,6 +5,8 @@ import proxyData from "../data/proxy"
 class PageClass {
   // 当前被读取的路径(用于记录依赖)
   currRecordPath = null 
+  // 当前记录动态显示的是属性还是文字
+  currRecordType = null
   arr = []
   // 依赖图
   depMap = new Map()
@@ -18,10 +20,19 @@ class PageClass {
 
     this.lifttimes = lifttimes
 
+    // 只能初始化这么写，否则要么在函数内拿不到this.data，要么就要单独为计算属性做代理
+    for(let key in observers) {
+      // 计算属性
+      if (!data.hasOwnProperty(key)) {
+        data[key] = observers[key](data)
+      } else {
+        // 观察者
+      }
+    }
+
     this.data = proxyData(this, data)
 
     document.addEventListener('DOMContentLoaded', () => {
-      console.warn('原始 dom 已加载')
       this.currEl = document.getElementById('app')
       console.warn('原始 dom 为')
       console.log(this.currEl)

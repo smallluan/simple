@@ -23,8 +23,15 @@ const selfClosingTags = ['input', 'img', 'br', 'hr', 'meta', 'link']
 //         parentNode: xxx,  // 父元素(方便插入新元素)
 //         depPos: ['attr', 'text'],  // 该路径下需要更新的位置
 //         pureTextNode: true  //  纯文本节点
-//       }
+//       },
 //     ]
+//     depData: [
+//      {
+//        data: 'fullName',
+//        fn: () => firstName + lastName
+//      }
+//     ],
+//     obs: [ fn1, fn2 ...]
 //   }
 // }
 

@@ -6,30 +6,55 @@ export default function depMap (page, ast) {
   let queue = [node]
   while (queue.length) {
     const currNode = queue.pop()
-    const { text, path } = currNode
+    const { text, path, attrs } = currNode
+    page.currRecordPath = path
     if (text && reg.test(text)) {
-      page.currRecordPath = path
+      page.currRecordType = 'text'
       // 需要在此补充...
-      parseData(page.data, text)  
+      const parseRes = fetchData(page.data, text)
+      // console.log(parseRes)
+    }
+    if (attrs && attrs.length) {
+      attrs.forEach(item => {
+        if (reg.test(item.value)) {
+          page.currRecordType = 'attr'
+          // console.log(item.value)
+          fetchData(page.data, item.value)
+        }
+      })
     }
     if (currNode.children?.length) {
       queue.push(...currNode.children)
     }
+    page.currRecordType = null
   }
 }
 
-function dep (key) {
+function dep (key, type) {
   if (!this.depMap.get(key)) {
     this.depMap.set(key, {
-      depPaths: new Set([this.currRecordPath])
+      depPaths: [{
+        path: this.currRecordPath,
+        type: type
+      }],
+      pathRecord: new Map([[this.currRecordPath, 0]])
     })
   } else {
-    this.depMap.get(key).depPaths.add(this.currRecordPath)
+    const target = this.depMap.get(key)
+    const pathIndex = target.pathRecord.get(this.currRecordPath)
+    if (pathIndex >= 0) {
+      target.depPaths[pathIndex].type = type
+    } else {
+      target.pathRecord.set(this.currRecordPath, target.depPaths.length)
+      target.depPaths.push({
+        path: this.currRecordPath,
+        type: type
+      })
+    }
   }
-  // this.currRecordPath = null
 }
 
-const parseData = (data, str, innerReplaceStr='', ) => {
+const fetchData = (data, str, innerReplaceStr='', ) => {
   return str.replace(reg, (match, exp) => {
    if (innerReplaceStr.length) {
       exp = exp.replace(/&gt;/g, '>').replace(/&lt;/g, '<').replace(/&lpar;/g, '(').replace(/&rpar;/g, ')')

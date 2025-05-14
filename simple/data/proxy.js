@@ -18,7 +18,7 @@ const handler = {
     key = typeof key === 'symbol' ? key.description: key
     if (key === 'Symbol.unscopables') return
     if (p.currRecordPath) {
-      p.dep(key)
+      p.dep(key, p.currRecordType)
     }
     return target[key]
   },

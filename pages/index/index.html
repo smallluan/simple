@@ -10,10 +10,16 @@
     <div>
       {{ firstName }}
       <div>{{ number }}</div>
-      <input type="text">
-      <div>{{ firstName + lastName }} {{ firstName }} {{ firstName }}</div>
+      <input disabled="{{ number === 0 }}" value="{{ number }}" type="text">
+      <div>我叫{{ fullName }}</div>
     </div>
-    <div>{{ number }}</div>
+    <!-- 
+      if for 定义为标签主要是为了占位，
+      确保路径信息变化范围最小化
+    -->
+    <if>
+      <div id="{{ number }}">{{ number }}</div>
+    </if>
     <for>
       <div>1</div>
     </for>

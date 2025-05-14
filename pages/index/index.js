@@ -19,7 +19,7 @@ Page({
 
   // 观察者(随动数据)
   observers: {
-    "fullName": (data) => {
+    "fullName": function(data) {
       return data.firstName + data.lastName
     }
   },
