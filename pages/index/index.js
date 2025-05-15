@@ -3,31 +3,42 @@ import Page from "../../simple"
 Page({
   // 数据部分
   data: {
-    firstName: '田',
-    lastName: '硕',
-    age: 21,
+    firstName: '张',
+    lastName: '伟',
     number: 0,
+    count: 3,
+    timer: null
   },
 
   // 生命周期
   lifttimes: {
-    start() {},
-    loaded() {
-      setTimeout(() => {
-        this.data.number = 100
-        this.data.fullName = this.data.number
-        this.data.number ++
-      }, 1000)
+    start() {
+      console.warn('生命周期 - start')
     },
-    updata() {},
-    updataed() {}
+    loaded() {
+      console.warn('生命周期 - loaded')
+      this.data.timer = setInterval(() => {
+        this.data.count --
+      }, 1000)
+      setTimeout(() => {
+        this.data.lastName = '益达'
+        this.data.number = 100
+        clearInterval(this.data.timer)
+      }, 3000)
+    },
+    update() {
+      console.warn('生命周期 - update')
+    },
+    updated() {
+      console.warn('生命周期 - updateed')
+    }
   },
 
   // 观察者(随动数据)
   observers: {
     "fullName": function(data) {
       return data.firstName + data.lastName
-    }
+    },
   },
 
   // 页面方法

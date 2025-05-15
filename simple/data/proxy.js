@@ -18,8 +18,21 @@ const handler = {
   get: (target, key, receiver) => {
     key = typeof key === 'symbol' ? key.description: key
     if (key === 'Symbol.unscopables') return
-    if (p.currRecordPath) {
-      p.dep(key, p.currRecordType, p.currRecordValue)
+    // console.log(`正在取值${key}`)
+    if (p.isInitObs) {
+      if (!p.depComp.has(key)) {
+        p.depComp.set(key, [{
+          data: p.currObsData,
+          fn: p.currObsFn
+        }])
+      } else {
+        p.depComp.get(key).push(p.currObsData)
+      }
+    }
+    if (!p.isInitObs) {
+      if (p.currRecordPath) {
+        p.dep(key, p.currRecordType, p.currRecordValue)
+      }
     }
     return target[key]
   },
@@ -28,12 +41,22 @@ const handler = {
       key = typeof key === 'symbol' ? key.description : key
       // console.log(`正在赋值【${key}】，值为${value}`)
       target[key] = value
-      p.pendingUpdataData.add(key)
-      Promise.resolve().then(() => {
-        p.updata()
-      })
-      // depMap(p, p.ast)
-      // p.render()  // 全量更新
+      if (!p.isInitObs) {
+        if (p.depMap.has(key)) {
+          p.pendingupdateData.add(key)
+        }
+        if (p.depComp.has(key)) {
+          p.depComp.get(key).forEach(x => {
+            if (p.depMap.has(x.data)) {
+              p.data[x.data] = x.fn.call(p, p.data)
+              p.pendingupdateData.add(x.data)
+            }
+          })
+        }
+        Promise.resolve().then(() => {
+          p.update()
+        })
+      }
       if (typeof value === 'object') {
         proxyData(page, value)
       }

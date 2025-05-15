@@ -26,8 +26,6 @@ export default function depMap (page, ast) {
     if (currNode.children?.length) {
       queue.push(...currNode.children)
     }
-    // page.currRecordType = null
-    // page.currRecordValue = null
   }
 }
 
