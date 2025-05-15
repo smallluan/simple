@@ -10,34 +10,34 @@ export default function depMap (page, ast) {
     page.currRecordPath = path
     if (text && reg.test(text)) {
       page.currRecordType = 'text'
-      // 需要在此补充...
       const parseRes = fetchData(page.data, text)
-      // console.log(parseRes)
+      pathValueMap(page, path, 'text', text, parseRes)
     }
     if (attrs && attrs.length) {
       attrs.forEach(item => {
         if (reg.test(item.value)) {
           page.currRecordType = 'attr'
-          // console.log(item.value)
-          fetchData(page.data, item.value)
+          const parseRes = fetchData(page.data, item.value)
+          pathValueMap(page, path, 'attr', item.value, parseRes, item.name)
         }
       })
     }
     if (currNode.children?.length) {
       queue.push(...currNode.children)
     }
-    page.currRecordType = null
+    // page.currRecordType = null
+    // page.currRecordValue = null
   }
 }
 
-function dep (key, type) {
+function dep (key, type, value) {
   if (!this.depMap.get(key)) {
     this.depMap.set(key, {
       depPaths: [{
         path: this.currRecordPath,
-        type: type
+        type: type,
       }],
-      pathRecord: new Map([[this.currRecordPath, 0]])
+      pathRecord: new Map([[this.currRecordPath, 0]]),
     })
   } else {
     const target = this.depMap.get(key)
@@ -48,8 +48,48 @@ function dep (key, type) {
       target.pathRecord.set(this.currRecordPath, target.depPaths.length)
       target.depPaths.push({
         path: this.currRecordPath,
-        type: type
+        type: type,
       })
+    }
+  }
+}
+
+function pathValueMap (page, path, type, exp, value, attrName = null) {
+  if (!page.pathValueMap.has(path)) {
+    let info = null
+    if (type === 'text') {
+      info = {
+        type: type,
+        exp: exp,
+        value: value,
+        attrName: attrName
+      }
+    } else {
+      info = {
+        type: type,
+        exp: [exp],
+        value: [value],
+        attrName: [attrName]
+      }
+    }
+    page.pathValueMap.set(path, info)
+  } else {
+    const target = page.pathValueMap.get(path)
+    if (type === 'text') {
+      target.exp = exp
+      target.value = value
+      target.attrName = attrName
+    } else {
+      let hasIndex = target.attrName.indexOf(attrName)
+      if (hasIndex === -1) {
+        target.exp.push(exp)
+        target.value.push(value)
+        target.attrName.push(attrName)
+      } else {
+        target.exp[hasIndex] = exp
+        target.value[hasIndex] = value
+        target.attrName[hasIndex] = attrName
+      }
     }
   }
 }

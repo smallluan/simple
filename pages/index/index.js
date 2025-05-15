@@ -12,7 +12,11 @@ Page({
   // 生命周期
   lifttimes: {
     start() {},
-    loaded() {},
+    loaded() {
+      setTimeout(() => {
+        this.data.number ++
+      }, 3000)
+    },
     updata() {},
     updataed() {}
   },
@@ -27,8 +31,7 @@ Page({
   // 页面方法
   methods: {
     incNumber () {
-      number ++
-
+      this.data.number ++
     }
   },
 })

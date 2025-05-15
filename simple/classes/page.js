@@ -7,10 +7,14 @@ class PageClass {
   currRecordPath = null 
   // 当前记录动态显示的是属性还是文字
   currRecordType = null
-  arr = []
-  // 依赖图
+  // 当前记录的值是多少
+  currRecordValue = null
+  // 变量-路径依赖图
   depMap = new Map()
+  // 路径-表达式-值依赖图
+  pathValueMap = new Map()
   constructor (options) {
+    console.time('初渲染用时')
     const {
       data = {},
       lifttimes = {},
@@ -44,13 +48,43 @@ class PageClass {
       } catch(e) {
         console.error(e)
       }
-      const ast = html2Ast(this, this.currEl.outerHTML.replace(/\n/g, ''))
+      this.ast = html2Ast(this, this.currEl.outerHTML.replace(/\n/g, ''))
       console.warn('html 解析成语法树')
-      console.log(ast)
-      depMap(this, ast)
-      console.warn('变量依赖收集表生成完毕')
+      console.log(this.ast)
+      depMap(this, this.ast)
+      console.warn('变量路径依赖收集表生成完毕')
       console.log(this.depMap)
+      console.warn('路径-表达式-值依赖生成完毕')
+      console.log(this.pathValueMap)
+      this.render()
+      console.warn('初渲染完毕')
+      console.timeEnd('初渲染用时')
+      this.lifttimes.loaded.call(this)
     })
+  }
+
+  render() {
+    console.time('render函数执行时间')
+    this.pathValueMap.forEach((value, key) => {
+      let node = this.currEl
+      const path = key.split('_').slice(1)
+      let p = 0
+      const d = value.type === 'text' ? path.length - 1 : path.length
+      while (p < d) {
+        node = node.children[Number(path[p])]
+        p ++
+      }
+      if (node) {
+        if (value.type === 'attr') {
+          value.value.forEach((item, index) => {
+            node.setAttribute(value.attrName[index], value.value[index])
+          })
+        } else {
+          node = node.innerText = value.value
+        }
+      }
+    })
+    console.timeEnd('render函数执行时间')
   }
 }
 
