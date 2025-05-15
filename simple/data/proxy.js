@@ -26,10 +26,14 @@ const handler = {
   set: (target, key, value) => {
     if (target[key] !== value) {
       key = typeof key === 'symbol' ? key.description : key
-      console.log(`正在赋值【${key}】，值为${value}`)
+      // console.log(`正在赋值【${key}】，值为${value}`)
       target[key] = value
-      depMap(p, p.ast)
-      p.render()  // 全量更新
+      p.pendingUpdataData.add(key)
+      Promise.resolve().then(() => {
+        p.updata()
+      })
+      // depMap(p, p.ast)
+      // p.render()  // 全量更新
       if (typeof value === 'object') {
         proxyData(page, value)
       }

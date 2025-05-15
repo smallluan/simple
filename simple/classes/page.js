@@ -13,6 +13,8 @@ class PageClass {
   depMap = new Map()
   // 路径-表达式-值依赖图
   pathValueMap = new Map()
+  // 待更新变量
+  pendingUpdataData = new Set()
   constructor (options) {
     console.time('初渲染用时')
     const {
@@ -56,16 +58,42 @@ class PageClass {
       console.log(this.depMap)
       console.warn('路径-表达式-值依赖生成完毕')
       console.log(this.pathValueMap)
-      this.render()
+      this.render(this.pathValueMap)
       console.warn('初渲染完毕')
       console.timeEnd('初渲染用时')
       this.lifttimes.loaded.call(this)
     })
   }
 
-  render() {
+  updata() {
+    if (!this.pendingUpdataData.size) return
+    console.warn('待更新的变量为')
+    console.log(this.pendingUpdataData)
+    const pendingUpdataPath = new Set()
+    this.pendingUpdataData.forEach(key => {
+      this.depMap.get(key).pathRecord.keys().forEach(path => {
+        pendingUpdataPath.add(path)
+      })
+    })
+    console.warn('待更新的路径为')
+    console.log(pendingUpdataPath)
+    pendingUpdataPath.forEach(path => {
+      const target = this.pathValueMap.get(path)
+      if (target.type === 'attr') {
+        target.exp.forEach((exp, index) => {
+          target.value[index] = this.fetchData(this.data, exp)
+        })
+      } else {
+        target.value = this.fetchData(this.data, target.exp)
+      }
+    })
+    this.pendingUpdataData.clear()
+    this.render(this.pathValueMap)
+  }
+
+  render(map) {
     console.time('render函数执行时间')
-    this.pathValueMap.forEach((value, key) => {
+    map.forEach((value, key) => {
       let node = this.currEl
       const path = key.split('_').slice(1)
       let p = 0
@@ -80,7 +108,9 @@ class PageClass {
             node.setAttribute(value.attrName[index], value.value[index])
           })
         } else {
-          node = node.innerText = value.value
+          if (node.innerText !== value.value) {
+            node.innerText = value.value
+          }
         }
       }
     })

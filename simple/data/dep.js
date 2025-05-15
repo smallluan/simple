@@ -2,6 +2,7 @@ const reg = /\{\{([^}]+)\}\}/g
 
 export default function depMap (page, ast) {
   page.dep = dep
+  page.fetchData = fetchData
   let node = ast
   let queue = [node]
   while (queue.length) {
@@ -86,9 +87,7 @@ function pathValueMap (page, path, type, exp, value, attrName = null) {
         target.value.push(value)
         target.attrName.push(attrName)
       } else {
-        target.exp[hasIndex] = exp
         target.value[hasIndex] = value
-        target.attrName[hasIndex] = attrName
       }
     }
   }

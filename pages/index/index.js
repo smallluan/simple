@@ -14,8 +14,10 @@ Page({
     start() {},
     loaded() {
       setTimeout(() => {
+        this.data.number = 100
+        this.data.fullName = this.data.number
         this.data.number ++
-      }, 3000)
+      }, 1000)
     },
     updata() {},
     updataed() {}
