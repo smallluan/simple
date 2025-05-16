@@ -58,7 +58,7 @@ const handler = {
         })
       }
       if (typeof value === 'object') {
-        proxyData(page, value)
+        proxyData(p, value)
       }
     }
     return true

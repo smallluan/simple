@@ -37,6 +37,8 @@ class PageClass {
 
     this.lifttimes = lifttimes
 
+    data.__$testData$__  = '元素占位符'
+
     this.isProxy = true
 
     this.data = proxyData(this, data)
@@ -70,6 +72,10 @@ class PageClass {
       console.warn('html 解析成语法树')
       console.log(this.ast)
       depMap(this, this.ast)
+      this.currRecordPath = null
+      this.currRecordType = null
+      this.currObsData = null
+      this.currObsFn = null
       console.warn('变量路径依赖收集完毕')
       console.log(this.depMap)
       console.warn('路径-表达式-值依赖生成完毕')
@@ -113,47 +119,19 @@ class PageClass {
     this.pathValueMap.forEach((value, key) => {
       let node
       if (value.dom) {
-        console.log('节点已经被缓存，直接使用该节点')
         node = value.dom
         this.change(node, value)
       } else {
-        // 逐层查找父元素
-        let path = key
-        let deep = 0
-        // 向上找三层，如果找不到就从头开始找
-        while(path && deep < 3) {
-          path = path.slice(0, -2)
-          if (this.pathValueMap.get(path)) {
-            node = this.pathValueMap.get(path).dom
-            break
-          }
-          deep ++
+        node = this.currEl
+        const path = key.split('_')
+        let p = 0
+        while (p < path.length) {
+          node = node.children[Number(path[p])]
+          p ++
         }
         if (node) {
-          path = key.substring(path.length + 1).split('_')
-          let p = 0
-          const d = value.type === 'text' ? path.length - 1 : path.length
-          while (p < d) {
-            node = node.children[Number(path[p])]
-            p ++
-          }
-          if (node) {
-            value.dom = node
-            this.change(node, value)
-          }
-        } else {
-          node = this.currEl
-          const path = key.split('_').slice(1)
-          let p = 0
-          const d = value.type === 'text' ? path.length - 1 : path.length
-          while (p < d) {
-            node = node.children[Number(path[p])]
-            p ++
-          }
-          if (node) {
-            value.dom = node
-            this.change(node, value)
-          }
+          value.dom = node
+          this.change(node, value)
         }
       }
     })
@@ -162,7 +140,38 @@ class PageClass {
     console.timeEnd('render函数执行时间')
   }
 
+  fetchData (data, str, innerReplaceStr='') {
+    const reg = /\{\{([^}]+)\}\}/g
+    return str.replace(reg, (match, exp) => {
+    if (innerReplaceStr.length) {
+        exp = exp.replace(/&gt;/g, '>').replace(/&lt;/g, '<').replace(/&lpar;/g, '(').replace(/&rpar;/g, ')')
+        // 创建全局匹配的正则表达式
+        const replaceReg = new RegExp(innerReplaceStr, 'g');
+        exp = exp.replace(replaceReg, 'data');
+      }
+      const func = new Function('data', `with(data){
+        const res = ${exp.trim()}
+        if (typeof res === 'object') {
+          return JSON.stringify(res)
+        }
+        return res}
+      `)
+      try {
+        return func(data)
+      } catch (e) {
+        console.error(`解析表达式出错: ${exp.trim()}`, e)
+        return match // 出错时返回原始的 {{expression}}
+      }
+    })
+  }
+
   change(node, value) {
+    if (node.tagName === 'FOR') {
+      const newNode = document.createElement('div')
+      newNode.innerHTML = value.value
+      node.replaceWith(newNode)
+      return
+    }
     if (value.type === 'attr') {
       value.value.forEach((item, index) => {
         if (value.value[index] === 'false') {

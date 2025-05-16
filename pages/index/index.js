@@ -7,7 +7,8 @@ Page({
     lastName: '伟',
     number: 0,
     count: 3,
-    timer: null
+    timer: null,
+    list: [1, 2, 3, 4]
   },
 
   // 生命周期
