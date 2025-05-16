@@ -26,6 +26,8 @@ class PageClass {
   pendingupdateData = new Set()
   // 计算属性依赖表
   depComp = new Map()
+  // for 节点依赖表
+  depForMap = new Map()
   constructor (options) {
     console.time('初渲染用时')
     const {
@@ -37,7 +39,7 @@ class PageClass {
 
     this.lifttimes = lifttimes
 
-    data.__$testData$__  = '元素占位符'
+    data.__$testData$__  = '我是占位符'
 
     this.isProxy = true
 
@@ -80,9 +82,12 @@ class PageClass {
       console.log(this.depMap)
       console.warn('路径-表达式-值依赖生成完毕')
       console.log(this.pathValueMap)
-      requestAnimationFrame(() => this.render())
-      console.warn('初渲染完毕')
-      console.timeEnd('初渲染用时')
+      requestAnimationFrame(() => {
+        this.render()
+        console.warn('初渲染完毕')
+        console.timeEnd('初渲染用时')
+      })
+     
       this.lifttimes.loaded.call(this)
     })
   }
@@ -119,6 +124,8 @@ class PageClass {
     this.pathValueMap.forEach((value, key) => {
       let node
       if (value.dom) {
+        // 先不处理列表变化
+        if (this.depForMap.has(key)) return
         node = value.dom
         this.change(node, value)
       } else {
@@ -130,8 +137,17 @@ class PageClass {
           p ++
         }
         if (node) {
-          value.dom = node
-          this.change(node, value)
+          if (this.depForMap.has(key)) {
+            const newNode = document.createElement('div')
+            this.depForMap.get(key).forEach(child => {
+              newNode.appendChild(child)
+            })
+            node.replaceWith(newNode)
+            value.dom = newNode
+          } else {
+            this.change(node, value)
+            value.dom = node
+          }
         }
       }
     })
@@ -166,12 +182,6 @@ class PageClass {
   }
 
   change(node, value) {
-    if (node.tagName === 'FOR') {
-      const newNode = document.createElement('div')
-      newNode.innerHTML = value.value
-      node.replaceWith(newNode)
-      return
-    }
     if (value.type === 'attr') {
       value.value.forEach((item, index) => {
         if (value.value[index] === 'false') {

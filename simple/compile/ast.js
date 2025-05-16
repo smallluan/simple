@@ -16,10 +16,12 @@ const comment = /^<!--[\s\S]*?-->/
 // 定义自闭合标签列表，当然这些标签也可以有结束标签
 const selfClosingTags = ['input', 'img', 'br', 'hr', 'meta', 'link']
 
+let stack = []  // 存放当前正在处理的节点
+let root  // ast 根节点
+let currParent  // 正在处理的父节点
+
 export default function html2Ast(page, html) {
-  let stack = []  // 存放当前正在处理的节点
-  let root  // ast 根节点
-  let currParent  // 正在处理的父节点
+
 
   function parseStartTag() {
     const start = html.match(startTagOpen)
@@ -152,9 +154,9 @@ export default function html2Ast(page, html) {
   return root
 }
 
-
 function handleFor (page, html, attrs) {
   const sourceData = page.data['list']
+  const sourceDataName = 'list'
   const forTag = new RegExp(`<\\/for[^>]*>`)
   const forEndTag = html.match(forTag)
   let forInnerHtml = html.slice(0, forEndTag.index)
@@ -163,17 +165,31 @@ function handleFor (page, html, attrs) {
   html = html.substring(whiteSpace[0].length)
   whiteSpace = forInnerHtml.match(/^\s*/)
   forInnerHtml = forInnerHtml.substring(whiteSpace[0].length)
-  // console.log(html2Ast(page, forInnerHtml))
+  // 占位元素与变量，保证首次更新，for标签被正确加入待更新序列
   html = `<div>{{__$testData$__}}</div>${html}`
-  // 创建Range对象
-  const range = document.createRange();
+  _s(page, forInnerHtml, sourceData, sourceDataName)
 
-  // 创建文档片段
-  const fragment = range.createContextualFragment(forInnerHtml);
-
-  // 获取第一个子元素
-  const domElement = fragment.firstElementChild;
-  console.log(domElement)
-  console.log(html)
   return html
+}
+
+function _s(page, elem, data, name) {
+  let doms = []
+  const range = document.createRange()
+  for (let i = 0; i < data.length; i ++) {
+    const domStr = replaceTemplateVariable(page, elem, 'item', `${name}[${i}]`)
+    const fragment = range.createContextualFragment(domStr)
+    const domElement = fragment.firstElementChild
+    doms.push(domElement)
+  }
+  page.depForMap.set(`${currParent.path}${currParent.path ? '_' : ''}${currParent.children.length}`, doms)
+  doms = null
+}
+
+function replaceTemplateVariable(page, str, oldVar, newVar) {
+  const regex = new RegExp(`\\{\\{\\s*([^}]*?\\b${oldVar}\\b[^}]*?)\\s*\\}\\}`, 'g');
+  return str.replace(regex, (match, expr) => {
+    // 只替换变量名，不影响运算符和其他内容
+    const replacedExpr = expr.replace(new RegExp(`\\b${oldVar}\\b`, 'g'), newVar);
+    return page.fetchData(page.data, `{{ ${replacedExpr} }}`);
+  });
 }

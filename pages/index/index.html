@@ -7,14 +7,17 @@
 </head>
 <body>
   <div id="app">
-    <for>
-      <div>1</div>
+    <for sorce="list">
+      <div>
+        <span>我是:</span><span>{{ item }}</span>
+      </div>
     </for>
     <div>
       <h1>数据{{ count }}秒后发生变化</h1>
-      <h1 style="color: red;font-weight: bold;">{{ fullName }}</h1>
+      <h1>{{ fullName }}</h1>
     </div>
-    <h1 style="color: red;font-weight: bold;">{{ number }}</h1>
+    <div>{{ list[0] + 100 }}</div>
+    <h1>{{ number }}</h1>
   </div>
 </body>
 </html>
