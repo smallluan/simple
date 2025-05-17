@@ -16,12 +16,12 @@ const comment = /^<!--[\s\S]*?-->/
 // 定义自闭合标签列表，当然这些标签也可以有结束标签
 const selfClosingTags = ['input', 'img', 'br', 'hr', 'meta', 'link']
 
-let stack = []  // 存放当前正在处理的节点
-let root  // ast 根节点
-let currParent  // 正在处理的父节点
 
 export default function html2Ast(page, html) {
 
+  let stack = []  // 存放当前正在处理的节点
+  let root  // ast 根节点
+  let currParent  // 正在处理的父节点
 
   function parseStartTag() {
     const start = html.match(startTagOpen)
