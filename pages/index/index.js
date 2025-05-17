@@ -46,7 +46,7 @@ Page({
       setTimeout(() => {
         this.data.lastName = '益达'
         this.data.number = 100
-        clearInterval(this.data.timer)
+        this.data.count = 5
         this.data.list.push({
           id: 3,
           value: {
@@ -57,6 +57,16 @@ Page({
         this.data.list[0].value.age = 10000
         this.data.list.shift()
       }, 10000)
+      setTimeout(() => {
+        clearInterval(this.data.timer)
+        this.data.list.push({
+          id: 4,
+          value: {
+            name: '暖羊羊',
+            age: 40
+          }
+        })
+      }, 15000)
     },
     update() {
       console.warn('生命周期 - update')

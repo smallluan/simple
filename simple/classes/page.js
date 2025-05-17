@@ -97,6 +97,8 @@ class PageClass {
   }
 
   render(path2ValueMap) {
+    console.error('forMap')
+    console.log(this.depForMap)
     // 这里还没有对 dom 进行缓存
     path2ValueMap.forEach((value, key) => {
       const path = key.split('_')
@@ -195,22 +197,6 @@ class PageClass {
       })
     })
     return map
-  }
-
-  change(node, value) {
-    if (value.type === 'attr') {
-      value.value.forEach((item, index) => {
-        if (value.value[index] === 'false') {
-          node.removeAttribute(value.attrName[index])
-          return
-        } 
-        node.setAttribute(value.attrName[index], value.value[index])
-      })
-    } else {
-      if (node.innerText !== value.value) {
-        node.innerText = value.value
-      }
-    }
   }
 }
 

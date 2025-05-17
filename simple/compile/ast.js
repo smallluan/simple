@@ -166,6 +166,7 @@ function handleFor (page, html, attrs, path) {
   html = html.substring(whiteSpace[0].length)
   whiteSpace = forInnerHtml.match(/^\s*/)
   forInnerHtml = forInnerHtml.substring(whiteSpace[0].length)
+  console.error(forInnerHtml)
   // 占位元素与变量，保证首次更新，for标签被正确加入待更新序列
   html = `<div source = {{ list }}></div>${html}`
   page._s = _s
@@ -177,12 +178,17 @@ function handleFor (page, html, attrs, path) {
 function _s(page, elem, data, name, path) {
   let doms = []
   const range = document.createRange()
-  for (let i = 0; i < data.length; i ++) {
-    const domStr = replaceTemplateVariable(page, elem, 'item', `${name}[${i}]`)
-    const fragment = range.createContextualFragment(domStr)
-    const domElement = fragment.firstElementChild
-    doms.push(domElement)
+  for (let i = 0; i < data.length; i++) {
+  const domStr = replaceTemplateVariable(page, elem, 'item', `${name}[${i}]`)
+  const fragment = range.createContextualFragment(domStr)
+  
+  // 将 fragment 中的所有子节点添加到数组中
+  while (fragment.firstChild) {
+    doms.push(fragment.firstChild)
+    // 将节点从 fragment 中移除，避免重复添加
+    fragment.removeChild(fragment.firstChild)
   }
+}
   page.depForMap.set(path, {
     doms: doms,
     template: elem
