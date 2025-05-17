@@ -28,6 +28,8 @@ class PageClass {
   depComp = new Map()
   // for 节点依赖表
   depForMap = new Map()
+  // if 节点依赖表
+  depIfMap = new Map()
   constructor (options) {
     const {
       data = {},
@@ -97,8 +99,6 @@ class PageClass {
   }
 
   render(path2ValueMap) {
-    console.error('forMap')
-    console.log(this.depForMap)
     // 这里还没有对 dom 进行缓存
     path2ValueMap.forEach((value, key) => {
       const path = key.split('_')
@@ -114,6 +114,17 @@ class PageClass {
         this.depForMap.get(key).doms.forEach(dom => {
           node.appendChild(dom)
         })
+      } else if (this.depIfMap.has(key)) {
+        const show = this.fetchData(this.data, `{{${this.depIfMap.get(key).condition}}}`) != 'false'
+        if (show) {
+          // console.error('显示元素')
+          const range = document.createRange()
+          const fragment = range.createContextualFragment(this.depIfMap.get(key).template)
+          node.appendChild(fragment)
+        } else {
+          // console.error('隐藏元素')
+          node.innerHTML = ''
+        }
       } else {
         if (value.text) {
           node.innerText = value.text

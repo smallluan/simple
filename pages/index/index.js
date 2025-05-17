@@ -8,6 +8,7 @@ Page({
     number: 0,
     count: 10,
     timer: null,
+    show: false,
     list: [
       {
         id: 0,
@@ -56,6 +57,7 @@ Page({
         })
         this.data.list[0].value.age = 10000
         this.data.list.shift()
+        this.data.show = true
       }, 10000)
       setTimeout(() => {
         clearInterval(this.data.timer)
