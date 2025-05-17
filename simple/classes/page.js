@@ -105,12 +105,19 @@ class PageClass {
         node = node.children[Number(path[p])]
         p ++
       }
-      if (value.text) {
-        node.innerText = value.text
+      if (this.depForMap.has(key)) {
+        node.innerHTML = ''
+        this.depForMap.get(key).doms.forEach(dom => {
+          node.appendChild(dom)
+        })
+      } else {
+        if (value.text) {
+          node.innerText = value.text
+        }
+        value.attrs.forEach(attr => {
+          node[attr.keyName] = attr.value
+        })
       }
-      value.attrs.forEach(attr => {
-        node[attr.keyName] = attr.value
-      })
     })
   }
 

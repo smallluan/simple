@@ -6,9 +6,31 @@ Page({
     firstName: '张',
     lastName: '伟',
     number: 0,
-    count: 3,
+    count: 10,
     timer: null,
-    list: [1, 2, 3, 4]
+    list: [
+      {
+        id: 0,
+        value: {
+          name: '小乱乱',
+          age: 21
+        }
+      },
+      {
+        id: 1,
+        value: {
+          name: '喜羊羊',
+          age: 30
+        }
+      },
+      {
+        id: 2,
+        value: {
+          name: '沸羊羊',
+          age: 100
+        }
+      },
+    ]
   },
 
   // 生命周期
@@ -20,13 +42,20 @@ Page({
       console.warn('生命周期 - loaded')
       this.data.timer = setInterval(() => {
         this.data.count --
-        this.data.list[0] ++
       }, 1000)
       setTimeout(() => {
         this.data.lastName = '益达'
         this.data.number = 100
         clearInterval(this.data.timer)
-      }, 3000)
+        this.data.list.push({
+          id: 3,
+          value: {
+            name: '美羊羊',
+            age: 10
+          }
+        })
+        this.data.list[0].value.age = 10000
+      }, 10000)
     },
     update() {
       console.warn('生命周期 - update')
