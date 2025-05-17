@@ -97,7 +97,6 @@ class PageClass {
   }
 
   render(path2ValueMap) {
-    console.log(this.depForMap)
     // 这里还没有对 dom 进行缓存
     path2ValueMap.forEach((value, key) => {
       const path = key.split('_')
@@ -108,9 +107,8 @@ class PageClass {
         p ++
       }
       if (this.depForMap.has(key)) {
-        // node.innerHTML = ''
-        this._s(this, this.depForMap.get(key).template, this.data, 'list', key)
-        console.log(this.depForMap.get(key).doms)
+        node.innerHTML = ''
+        this._s(this, this.depForMap.get(key).template, this.data.list, 'list', key)
         this.depForMap.get(key).doms.forEach(dom => {
           node.appendChild(dom)
         })

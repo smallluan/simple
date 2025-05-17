@@ -26,7 +26,9 @@ export default function proxyData(page, data, parentPath = '') {
       }
 
       if (!p.isInitObs) {
-        if (p.currRecordPath) {
+        // 防止记录下数组或者对象的索引、属性
+        // 当 !parentPath 是可以认为是第一层对象
+        if (p.currRecordPath && !parentPath) {
           p.dep(key, p.currRecordType, p.parseRes, p.template, p.keyName)
         }
       }
