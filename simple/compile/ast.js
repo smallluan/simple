@@ -167,7 +167,7 @@ function handleFor (page, html, attrs, path) {
   whiteSpace = forInnerHtml.match(/^\s*/)
   forInnerHtml = forInnerHtml.substring(whiteSpace[0].length)
   // 占位元素与变量，保证首次更新，for标签被正确加入待更新序列
-  html = `<div>{{__$testData$__}}</div>${html}`
+  html = `<div>{{ list }}</div>${html}`
   page._s = _s
   _s(page, forInnerHtml, sourceData, sourceDataName, path)
 

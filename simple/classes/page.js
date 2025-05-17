@@ -91,11 +91,13 @@ class PageClass {
     console.warn('待更新的变量为')
     console.log(pendingupdateData)
     const path2ValueMap = this.genPath2ValueMap(pendingupdateData)
+    console.log(path2ValueMap)
     this.pendingupdateData.clear()
-    requestAnimationFrame(() => this._render(path2ValueMap))
+    requestAnimationFrame(() => this.render(path2ValueMap))
   }
 
-  _render(path2ValueMap) {
+  render(path2ValueMap) {
+    console.log(this.depForMap)
     // 这里还没有对 dom 进行缓存
     path2ValueMap.forEach((value, key) => {
       const path = key.split('_')
@@ -106,7 +108,9 @@ class PageClass {
         p ++
       }
       if (this.depForMap.has(key)) {
-        node.innerHTML = ''
+        // node.innerHTML = ''
+        this._s(this, this.depForMap.get(key).template, this.data, 'list', key)
+        console.log(this.depForMap.get(key).doms)
         this.depForMap.get(key).doms.forEach(dom => {
           node.appendChild(dom)
         })
@@ -120,43 +124,6 @@ class PageClass {
       }
     })
   }
-
-  // render() {
-  //   console.time('render函数执行时间')
-  //   this.pathValueMap.forEach((value, key) => {
-  //     let node
-  //     if (value.dom) {
-  //       // 先不处理列表变化
-  //       if (this.depForMap.has(key)) return
-  //       node = value.dom
-  //       this.change(node, value)
-  //     } else {
-  //       node = this.currEl
-  //       const path = key.split('_')
-  //       let p = 0
-  //       while (p < path.length) {
-  //         node = node.children[Number(path[p])]
-  //         p ++
-  //       }
-  //       if (node) {
-  //         if (this.depForMap.has(key)) {
-  //           const newNode = document.createElement('div')
-  //           this.depForMap.get(key).forEach(child => {
-  //             newNode.appendChild(child)
-  //           })
-  //           node.replaceWith(newNode)
-  //           value.dom = newNode
-  //         } else {
-  //           this.change(node, value)
-  //           value.dom = node
-  //         }
-  //       }
-  //     }
-  //   })
-  //   this.lifttimes.updated.call(this)
-  //   console.warn('render函数执行完成')
-  //   console.timeEnd('render函数执行时间')
-  // }
 
   fetchData (data, str, innerReplaceStr='') {
     const reg = /\{\{([^}]+)\}\}/g

@@ -1,65 +1,82 @@
 let p = null
-export default function proxyData (page, data) {
+export default function proxyData(page, data, parentPath = '') {
   if (!p) p = page
   if (typeof data !== 'object' || data === null) {
     return data
   }
-  const proxy = new Proxy(data, handler)
-  for (let key in data) {
-    if (typeof data[key] === 'object') {
-      proxy[key] = proxyData(page, data[key])
-    }
-  }
-  return proxy
-}
 
-const handler = {
-  get: (target, key, receiver) => {
-    key = typeof key === 'symbol' ? key.description: key
-    if (key === 'Symbol.unscopables') return
-    // console.log(`正在取值${key}`)
-    if (p.isInitObs) {
-      if (!p.depComp.has(key)) {
-        p.depComp.set(key, [{
-          data: p.currObsData,
-          fn: p.currObsFn
-        }])
-      } else {
-        p.depComp.get(key).push(p.currObsData)
-      }
-    }
-    if (!p.isInitObs) {
-      if (p.currRecordPath) {
-        p.dep(key, p.currRecordType, p.parseRes, p.template, p.keyName)
-      }
-    }
-    return target[key]
-  },
-  set: (target, key, value) => {
-    if (target[key] !== value) {
+  // 为当前对象创建路径信息
+  const proxy = new Proxy(data, {
+    get: (target, key, receiver) => {
       key = typeof key === 'symbol' ? key.description : key
-      // console.log(`正在赋值【${key}】，值为${value}`)
-      target[key] = value
-      if (!p.isInitObs) {
-        if (p.depMap.has(key)) {
-          p.pendingupdateData.add(key)
+      if (key === 'Symbol.unscopables') return
+
+      const fullKey = parentPath ? `${parentPath}.${key}` : key
+      const topLevelKey = fullKey.split('.')[0]
+
+      if (p.isInitObs) {
+        if (!p.depComp.has(topLevelKey)) {
+          p.depComp.set(topLevelKey, [{
+            data: p.currObsData,
+            fn: p.currObsFn
+          }])
+        } else {
+          p.depComp.get(topLevelKey).push(p.currObsData)
         }
-        if (p.depComp.has(key)) {
-          p.depComp.get(key).forEach(x => {
-            if (p.depMap.has(x.data)) {
-              p.data[x.data] = x.fn.call(p, p.data)
-              p.pendingupdateData.add(x.data)
-            }
+      }
+
+      if (!p.isInitObs) {
+        if (p.currRecordPath) {
+          p.dep(key, p.currRecordType, p.parseRes, p.template, p.keyName)
+        }
+      }
+
+      return target[key]
+    },
+
+    set: (target, key, value) => {
+      if (target[key] !== value) {
+        key = typeof key === 'symbol' ? key.description : key
+
+        const fullKey = parentPath ? `${parentPath}.${key}` : key
+        const topLevelKey = fullKey.split('.')[0]
+
+        target[key] = value
+
+        if (!p.isInitObs) {
+          if (p.depMap.has(topLevelKey)) {
+            p.pendingupdateData.add(topLevelKey)
+          }
+
+          if (p.depComp.has(topLevelKey)) {
+            p.depComp.get(topLevelKey).forEach(x => {
+              if (p.depMap.has(x.data)) {
+                p.data[x.data] = x.fn.call(p, p.data)
+                p.pendingupdateData.add(x.data)
+              }
+            })
+          }
+
+          Promise.resolve().then(() => {
+            p.update(p.pendingupdateData)
           })
         }
-        Promise.resolve().then(() => {
-          p.update(p.pendingupdateData)
-        })
+
+        if (typeof value === 'object') {
+          proxyData(p, value, fullKey)
+        }
       }
-      if (typeof value === 'object') {
-        proxyData(p, value)
-      }
+      return true
     }
-    return true
+  })
+
+  // 递归处理子属性
+  for (let key in data) {
+    if (typeof data[key] === 'object') {
+      const childPath = parentPath ? `${parentPath}.${key}` : key
+      proxy[key] = proxyData(page, data[key], childPath)
+    }
   }
+
+  return proxy
 }
