@@ -29,7 +29,6 @@ class PageClass {
   // for 节点依赖表
   depForMap = new Map()
   constructor (options) {
-    console.time('初渲染用时')
     const {
       data = {},
       lifttimes = {},
@@ -80,88 +79,48 @@ class PageClass {
       this.currObsFn = null
       console.warn('变量路径依赖收集完毕')
       console.log(this.depMap)
-      console.warn('路径-表达式-值依赖生成完毕')
-      console.log(this.pathValueMap)
-      requestAnimationFrame(() => {
-        this.render()
-        console.warn('初渲染完毕')
-        console.timeEnd('初渲染用时')
-      })
-     
+      // 触发一次初始化更新
+      this.update(new Set(this.depMap.keys()))
       this.lifttimes.loaded.call(this)
     })
   }
 
-  update() {
-    if (!this.pendingupdateData.size) return
+  update(pendingupdateData) {
+    if (!pendingupdateData.size) return
     this.lifttimes.update.call(this)
     console.warn('待更新的变量为')
-    console.log(this.pendingupdateData)
-    const pendingupdatePath = new Set()
-    this.pendingupdateData.forEach(key => {
-      this.depMap.get(key).pathRecord.keys().forEach(path => {
-        pendingupdatePath.add(path)
-      })
-    })
-    console.warn('待更新的路径为')
-    console.log(pendingupdatePath)
-    pendingupdatePath.forEach(path => {
-      const target = this.pathValueMap.get(path)
-      if (target.type === 'attr') {
-        target.exp.forEach((exp, index) => {
-          target.value[index] = this.fetchData(this.data, exp)
-        })
-      } else {
-        target.value = this.fetchData(this.data, target.exp)
-      }
-    })
+    console.log(pendingupdateData)
+    const path2ValueMap = this.genPath2ValueMap(pendingupdateData)
+    console.log(path2ValueMap)
     this.pendingupdateData.clear()
-    requestAnimationFrame(() => this.render())
+    requestAnimationFrame(() => this.render(path2ValueMap))
   }
 
-  render() {
-    console.time('render函数执行时间')
-    this.pathValueMap.forEach((value, key) => {
-      let node
-      if (value.dom) {
-        // 处理列表变化
-        node = value.dom
-        if (this.depForMap.has(key)) {
-          node.innerHTML = ''
-          console.log(this.depForMap.get(key))
-          this._s(this, this.depForMap.get(key).template, this.data.list, 'list', key)
-          this.depForMap.get(key).doms.forEach(dom => {
-            node.appendChild(dom)
-          })
-        } else {
-          this.change(node, value)
-        }
+  render(path2ValueMap) {
+    // 这里还没有对 dom 进行缓存
+    path2ValueMap.forEach((value, key) => {
+      const path = key.split('_')
+      let node = this.currEl
+      let p = 0
+      while (p < path.length) {
+        node = node.children[Number(path[p])]
+        p ++
+      }
+      if (this.depForMap.has(key)) {
+        node.innerHTML = ''
+        this._s(this, this.depForMap.get(key).template, this.data.list, 'list', key)
+        this.depForMap.get(key).doms.forEach(dom => {
+          node.appendChild(dom)
+        })
       } else {
-        node = this.currEl
-        const path = key.split('_')
-        let p = 0
-        while (p < path.length) {
-          node = node.children[Number(path[p])]
-          p ++
+        if (value.text) {
+          node.innerText = value.text
         }
-        if (node) {
-          if (this.depForMap.has(key)) {
-            const newNode = document.createElement('div')
-            this.depForMap.get(key).doms.forEach(child => {
-              newNode.appendChild(child)
-            })
-            node.replaceWith(newNode)
-            value.dom = newNode
-          } else {
-            this.change(node, value)
-            value.dom = node
-          }
-        }
+        value.attrs.forEach(attr => {
+          node[attr.keyName] = attr.value
+        })
       }
     })
-    this.lifttimes.updated.call(this)
-    console.warn('render函数执行完成')
-    console.timeEnd('render函数执行时间')
   }
 
   fetchData (data, str, innerReplaceStr='') {
@@ -187,6 +146,55 @@ class PageClass {
         return match // 出错时返回原始的 {{expression}}
       }
     })
+  }
+
+  genPath2ValueMap(pendingupdateData) {
+    const map = new Map()
+    pendingupdateData.forEach(item => {
+      const itemPaths = this.depMap.get(item).depPaths
+      itemPaths.forEach(pathInfo => {
+        if (!map.has(pathInfo.path)) {
+          let attrs = []
+          let text = null
+          let attrsMap = new Map()
+          pathInfo.source.forEach(i => {
+            if (i.type === 'text') {
+              text = this.fetchData(this.data, i.template)
+            } else if (i.type === 'attr') {
+              attrsMap.set(i.keyName, attrs.length)
+              attrs.push({
+                keyName: i.keyName,
+                template: i.template,
+                value: this.fetchData(this.data, i.template),
+              })
+            }
+          })
+          map.set(pathInfo.path, {
+            attrs: attrs,
+            text: text,
+            attrsMap: attrsMap
+          })
+        } else {
+          const targetPath = map.get(pathInfo.path)
+          pathInfo.source.forEach(i => {
+            if (i.type === 'text') {
+
+              targetPath.text = this.fetchData(this.data, i.template)
+            } else if (i.type === 'attr') {
+              // 防止一个属性被多次记录
+              if (!targetPath.attrsMap.has(i.keyName)) {
+                  targetPath.attrs.push({
+                  keyName: i.keyName,
+                  template: i.template,
+                  value: this.fetchData(this.data, i.template)
+                })
+              }
+            }
+          })
+        }
+      })
+    })
+    return map
   }
 
   change(node, value) {

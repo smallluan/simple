@@ -55,6 +55,7 @@ Page({
           }
         })
         this.data.list[0].value.age = 10000
+        this.data.list.shift()
       }, 10000)
     },
     update() {

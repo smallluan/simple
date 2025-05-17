@@ -122,7 +122,7 @@ export default function html2Ast(page, html) {
     if (startTagMatch) {
       let { tag, attrs, isSelfClosing } = startTagMatch
       if (tag === 'for') {
-        let path = `${currParent.path}${currParent.path ? '_' : ''}${currParent.children.length}`
+        const path = `${currParent.path}${currParent.path ? '_' : ''}${currParent.children.length}`
         html = handleFor(page, html, attrs, path)
       } else {
         startTagHandler(tag, attrs, isSelfClosing)
@@ -167,7 +167,7 @@ function handleFor (page, html, attrs, path) {
   whiteSpace = forInnerHtml.match(/^\s*/)
   forInnerHtml = forInnerHtml.substring(whiteSpace[0].length)
   // 占位元素与变量，保证首次更新，for标签被正确加入待更新序列
-  html = `<div>{{__$testData$__}}</div>${html}`
+  html = `<div source = {{ list }}></div>${html}`
   page._s = _s
   _s(page, forInnerHtml, sourceData, sourceDataName, path)
 
@@ -187,8 +187,6 @@ function _s(page, elem, data, name, path) {
     doms: doms,
     template: elem
   })
-  console.warn('1234567895')
-  console.log(page.depForMap)
   doms = null
 }
 
