@@ -124,10 +124,18 @@ class PageClass {
     this.pathValueMap.forEach((value, key) => {
       let node
       if (value.dom) {
-        // 先不处理列表变化
-        if (this.depForMap.has(key)) return
+        // 处理列表变化
         node = value.dom
-        this.change(node, value)
+        if (this.depForMap.has(key)) {
+          node.innerHTML = ''
+          console.log(this.depForMap.get(key))
+          this._s(this, this.depForMap.get(key).template, this.data.list, 'list', key)
+          this.depForMap.get(key).doms.forEach(dom => {
+            node.appendChild(dom)
+          })
+        } else {
+          this.change(node, value)
+        }
       } else {
         node = this.currEl
         const path = key.split('_')
@@ -139,7 +147,7 @@ class PageClass {
         if (node) {
           if (this.depForMap.has(key)) {
             const newNode = document.createElement('div')
-            this.depForMap.get(key).forEach(child => {
+            this.depForMap.get(key).doms.forEach(child => {
               newNode.appendChild(child)
             })
             node.replaceWith(newNode)

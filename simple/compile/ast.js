@@ -16,12 +16,12 @@ const comment = /^<!--[\s\S]*?-->/
 // 定义自闭合标签列表，当然这些标签也可以有结束标签
 const selfClosingTags = ['input', 'img', 'br', 'hr', 'meta', 'link']
 
-let stack = []  // 存放当前正在处理的节点
-let root  // ast 根节点
-let currParent  // 正在处理的父节点
 
 export default function html2Ast(page, html) {
 
+  let stack = []  // 存放当前正在处理的节点
+  let root  // ast 根节点
+  let currParent  // 正在处理的父节点
 
   function parseStartTag() {
     const start = html.match(startTagOpen)
@@ -122,7 +122,8 @@ export default function html2Ast(page, html) {
     if (startTagMatch) {
       let { tag, attrs, isSelfClosing } = startTagMatch
       if (tag === 'for') {
-        html = handleFor(page, html, attrs)
+        let path = `${currParent.path}${currParent.path ? '_' : ''}${currParent.children.length}`
+        html = handleFor(page, html, attrs, path)
       } else {
         startTagHandler(tag, attrs, isSelfClosing)
       }
@@ -154,7 +155,7 @@ export default function html2Ast(page, html) {
   return root
 }
 
-function handleFor (page, html, attrs) {
+function handleFor (page, html, attrs, path) {
   const sourceData = page.data['list']
   const sourceDataName = 'list'
   const forTag = new RegExp(`<\\/for[^>]*>`)
@@ -167,12 +168,13 @@ function handleFor (page, html, attrs) {
   forInnerHtml = forInnerHtml.substring(whiteSpace[0].length)
   // 占位元素与变量，保证首次更新，for标签被正确加入待更新序列
   html = `<div>{{__$testData$__}}</div>${html}`
-  _s(page, forInnerHtml, sourceData, sourceDataName)
+  page._s = _s
+  _s(page, forInnerHtml, sourceData, sourceDataName, path)
 
   return html
 }
 
-function _s(page, elem, data, name) {
+function _s(page, elem, data, name, path) {
   let doms = []
   const range = document.createRange()
   for (let i = 0; i < data.length; i ++) {
@@ -181,7 +183,12 @@ function _s(page, elem, data, name) {
     const domElement = fragment.firstElementChild
     doms.push(domElement)
   }
-  page.depForMap.set(`${currParent.path}${currParent.path ? '_' : ''}${currParent.children.length}`, doms)
+  page.depForMap.set(path, {
+    doms: doms,
+    template: elem
+  })
+  console.warn('1234567895')
+  console.log(page.depForMap)
   doms = null
 }
 

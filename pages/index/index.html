@@ -9,14 +9,15 @@
   <div id="app">
     <for sorce="list">
       <div>
-        <span>我是:</span><span>{{ item }}</span>
+        <span>我是:</span><span>{{ item.value.name }}</span>
+        <span>我今年{{ item.value.age }}岁</span>
       </div>
     </for>
     <div>
       <h1>数据{{ count }}秒后发生变化</h1>
       <h1>{{ fullName }}</h1>
     </div>
-    <div>{{ list[0] + 100 }}</div>
+    <div>{{ list[0].value.age + 100 }}</div>
     <h1>{{ number }}</h1>
   </div>
 </body>
