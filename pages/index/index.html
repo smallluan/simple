@@ -13,10 +13,10 @@
       </div>
     </for>
     <div>
-      <h1>数据{{ count }}秒后发生变化</h1>
+      <h1 id="{{ count }}">数据{{ count }}秒后发生变化</h1>
       <h1>{{ fullName }}</h1>
     </div>
-    <div>{{ list[0] + 100 }}</div>
+    <div id="{{ count }}" name="{{ number + count }}">{{ list[0] + 100 }}</div>
     <h1>{{ number }}</h1>
   </div>
 </body>

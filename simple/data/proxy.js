@@ -1,4 +1,3 @@
-import depMap from './dep'
 let p = null
 export default function proxyData (page, data) {
   if (!p) p = page
@@ -31,7 +30,7 @@ const handler = {
     }
     if (!p.isInitObs) {
       if (p.currRecordPath) {
-        p.dep(key, p.currRecordType, p.currRecordValue)
+        p.dep(key, p.currRecordType, p.parseRes, p.template, p.keyName)
       }
     }
     return target[key]
@@ -54,7 +53,7 @@ const handler = {
           })
         }
         Promise.resolve().then(() => {
-          p.update()
+          p.update(p.pendingupdateData)
         })
       }
       if (typeof value === 'object') {

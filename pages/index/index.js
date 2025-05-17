@@ -20,6 +20,7 @@ Page({
       console.warn('生命周期 - loaded')
       this.data.timer = setInterval(() => {
         this.data.count --
+        this.data.list[0] ++
       }, 1000)
       setTimeout(() => {
         this.data.lastName = '益达'
