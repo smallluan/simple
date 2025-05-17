@@ -124,6 +124,9 @@ export default function html2Ast(page, html) {
       if (tag === 'for') {
         const path = `${currParent.path}${currParent.path ? '_' : ''}${currParent.children.length}`
         html = handleFor(page, html, attrs, path)
+      } else if (tag === 'if') {
+        const path = `${currParent.path}${currParent.path ? '_' : ''}${currParent.children.length}`
+        html = handleIf(page, html, attrs, path)
       } else {
         startTagHandler(tag, attrs, isSelfClosing)
       }
@@ -166,9 +169,8 @@ function handleFor (page, html, attrs, path) {
   html = html.substring(whiteSpace[0].length)
   whiteSpace = forInnerHtml.match(/^\s*/)
   forInnerHtml = forInnerHtml.substring(whiteSpace[0].length)
-  console.error(forInnerHtml)
   // 占位元素与变量，保证首次更新，for标签被正确加入待更新序列
-  html = `<div source = {{ list }}></div>${html}`
+  html = `<div source = "{{ list }}"></div>${html}`
   page._s = _s
   _s(page, forInnerHtml, sourceData, sourceDataName, path)
 
@@ -203,4 +205,27 @@ function replaceTemplateVariable(page, str, oldVar, newVar) {
     const replacedExpr = expr.replace(new RegExp(`\\b${oldVar}\\b`, 'g'), newVar);
     return page.fetchData(page.data, `{{ ${replacedExpr} }}`);
   });
+}
+
+function handleIf(page, html, attrs, path) {
+  const ifTag = new RegExp(`<\\/if[^>]*>`)
+  const ifEndTag = html.match(ifTag)
+  let ifInnerHtml = html.slice(0, ifEndTag.index)
+  html = html.substring(ifEndTag.index + ifEndTag[0].length)
+  let whiteSpace = html.match(/^\s*/)
+  html = html.substring(whiteSpace[0].length)
+  whiteSpace = ifInnerHtml.match(/^\s*/)
+  ifInnerHtml = ifInnerHtml.substring(whiteSpace[0].length)
+  // 占位元素与变量，保证首次更新，for标签被正确加入待更新序列
+  html = `<div source = "{{ show }}"></div>${html}`
+  page._f = _f
+  _f(page, ifInnerHtml, path)
+  return html
+}
+
+function _f(page, elem, path) {
+  page.depIfMap.set(path, {
+    template: elem,
+    condition: 'show'
+  })
 }
