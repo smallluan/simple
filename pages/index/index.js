@@ -5,33 +5,8 @@ Page({
   data: {
     firstName: '张',
     lastName: '伟',
-    number: 0,
-    count: 5,
-    timer: null,
-    show: false,
-    list: [
-      {
-        id: 0,
-        value: {
-          name: '小乱乱',
-          age: 21
-        }
-      },
-      {
-        id: 1,
-        value: {
-          name: '喜羊羊',
-          age: 30
-        }
-      },
-      {
-        id: 2,
-        value: {
-          name: '沸羊羊',
-          age: 100
-        }
-      },
-    ]
+    number1: 0,
+    number2: 10
   },
 
   // 生命周期
@@ -39,37 +14,12 @@ Page({
     start() {
       console.warn('生命周期 - start')
     },
-    loaded() {
+    loaded(data) {
       console.warn('生命周期 - loaded')
-      this.data.timer = setInterval(() => {
-        this.data.count --
-      }, 1000)
       setTimeout(() => {
-        this.data.lastName = '益达'
-        this.data.number = 100
-        this.data.count = 5
-        this.data.list.push({
-          id: 3,
-          value: {
-            name: '美羊羊',
-            age: 10
-          }
-        })
-        this.data.list[0].value.age = 10000
-        this.data.list.shift()
-        this.data.show = true
-      }, 5000)
-      setTimeout(() => {
-        clearInterval(this.data.timer)
-        this.data.show = false
-        this.data.list.push({
-          id: 4,
-          value: {
-            name: '暖羊羊',
-            age: 40
-          }
-        })
-      }, 10000)
+        data.number1 = 10
+        data.lastName = '益达'
+      }, 3000)
     },
     update() {
       console.warn('生命周期 - update')
@@ -84,16 +34,18 @@ Page({
     "fullName": function(data) {
       return data.firstName + data.lastName
     },
+    "fullNumber": function(data) {
+      return data.number1 + data.number2
+    },
+    "number1": function() {
+      console.log('number1 发生了变化')
+    }
   },
 
   // 页面方法
   methods: {
-    func(e) {
-      console.log(e)
-      this.data.count ++
-    },
-    incNumber () {
-      this.data.number ++
+    incNumber (e, data) {
+      data.number1 += 10
     }
   },
 })

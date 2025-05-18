@@ -14,9 +14,13 @@ class PageClass {
   currRecordType = null
   // 当前记录的值是多少
   currRecordValue = null
+  // 当前计算属性访问的变量
+  currCompData = null
+  // 当前计算属性访问变量的函数
+  currCompFn = null
   // 当前观察者访问的变量
   currObsData = null
-  // 当前观察者访问变量的函数
+  // 当前观察者执行的函数
   currObsFn = null
   // 变量-路径依赖图
   depMap = new Map()
@@ -24,6 +28,8 @@ class PageClass {
   pathValueMap = new Map()
   // 待更新变量
   pendingupdateData = new Set()
+  // 观察者依赖表
+  depObsMap = new Map()
   // 计算属性依赖表
   depComp = new Map()
   // for 节点依赖表
@@ -59,11 +65,12 @@ class PageClass {
     for(let key in observers) {
       // 计算属性
       if (!data.hasOwnProperty(key)) {
-        this.currObsData = key
-        this.currObsFn = observers[key]
+        this.currCompData = key
+        this.currCompFn = observers[key]
         this.data[key] = proxyData(this, observers[key](this.data))
       } else {
         // 观察者
+        this.depObsMap.set(key, observers[key])
       }
     }
 
@@ -78,7 +85,7 @@ class PageClass {
       if (!this.currEl) {
         throw new Error('未找到 id = app 的元素')
       }
-      this.lifttimes.start.call(this)
+      this.lifttimes.start.call(this, this.data)
       this.ast = html2Ast(this, this.currEl.outerHTML.replace(/\n/g, ''))
       console.warn('html 解析成语法树')
 
@@ -86,13 +93,13 @@ class PageClass {
       genDepMap(this, this.ast)
       this.currRecordPath = null
       this.currRecordType = null
-      this.currObsData = null
-      this.currObsFn = null
+      this.currCompData = null
+      this.currCompFn = null
       console.warn('变量路径依赖收集完毕')
       console.log(this.depMap)
       // 触发一次初始化更新
       this.update(new Set(this.depMap.keys()))
-      this.lifttimes.loaded.call(this)
+      this.lifttimes.loaded.call(this, this.data)
       console.log(this.depFuncMap)
       this.bindFunc()
     })
@@ -156,6 +163,8 @@ class PageClass {
         })
       }
     })
+    // 在这里执行观察者函数
+    this.implementObs()
   }
 
   fetchData (data, str, innerReplaceStr='') {
@@ -255,6 +264,7 @@ class PageClass {
   // 绑定方法
   bindFunc() {
     this.depFuncMap.forEach((value, key) => {
+      console.error(2)
       console.log(key, value)
       const path = key.split('_')
       let node = this.currEl
@@ -263,9 +273,18 @@ class PageClass {
         node = node.children[Number(path[p])]
         p ++
       }
-      const { type, func } = value
-      node.addEventListener(type, (e) => this[func].call(this, e))
+      value.forEach(item => {
+        const { type, func } = item
+         node.addEventListener(type, (e) => this[func].call(this, e, this.data))
+      })
       node.removeAttribute('@click')
+    })
+  }
+
+  // 执行观察者函数
+  implementObs() {
+    this.depObsMap.forEach((value, key) => {
+      value.call(this, this.data)
     })
   }
 
