@@ -88,6 +88,10 @@ Page({
 
   // 页面方法
   methods: {
+    func(e) {
+      console.log(e)
+      this.data.count ++
+    },
     incNumber () {
       this.data.number ++
     }

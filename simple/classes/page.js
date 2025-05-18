@@ -30,6 +30,8 @@ class PageClass {
   depForMap = new Map()
   // if 节点依赖表
   depIfMap = new Map()
+  // func 节点依赖表
+  depFuncMap = new Map()
   constructor (options) {
     const {
       data = {},
@@ -47,6 +49,10 @@ class PageClass {
     this.data = proxyData(this, data)
 
     this.isProxy = false
+
+    for(let key in methods) {
+      this[key] = methods[key]
+    }
 
     this.isInitObs = true
 
@@ -87,6 +93,8 @@ class PageClass {
       // 触发一次初始化更新
       this.update(new Set(this.depMap.keys()))
       this.lifttimes.loaded.call(this)
+      console.log(this.depFuncMap)
+      this.bindFunc()
     })
   }
 
@@ -242,6 +250,23 @@ class PageClass {
       node.appendChild(this.ast2Dom(child))
     })
     return node
+  }
+
+  // 绑定方法
+  bindFunc() {
+    this.depFuncMap.forEach((value, key) => {
+      console.log(key, value)
+      const path = key.split('_')
+      let node = this.currEl
+      let p = 0
+      while (p < path.length) {
+        node = node.children[Number(path[p])]
+        p ++
+      }
+      const { type, func } = value
+      node.addEventListener(type, (e) => this[func].call(this, e))
+      node.removeAttribute('@click')
+    })
   }
 
   replaceTemplateVariable(page, str, oldVar, newVar) {

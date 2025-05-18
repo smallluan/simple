@@ -23,7 +23,16 @@ export default function genDepMap (page, ast) {
           page.currRecordType = 'attr'
           page.template = item.value
           page.keyName = item.name
-          const parseRes = page.fetchData(page.data, item.value)
+          if (item.name.startsWith('@')) {
+            // 收集方法
+            page.depFuncMap.set(path, {
+              type: item.name.slice(1),
+              func: reg.exec(item.value)[1].trim()
+            })
+            // page.depMap.set()
+          } else {
+            const parseRes = page.fetchData(page.data, item.value)
+          }
         }
       })
     }
