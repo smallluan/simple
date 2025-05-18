@@ -1,5 +1,5 @@
 import html2Ast from "../compile/ast"
-import depMap from "../data/dep"
+import genDepMap from "../data/dep"
 import proxyData from "../data/proxy"
 
 class PageClass {
@@ -63,6 +63,8 @@ class PageClass {
 
     this.isInitObs = false
 
+    this.genDepMap = genDepMap
+
     document.addEventListener('DOMContentLoaded', () => {
       this.currEl = document.getElementById('app')
       console.warn('原始 dom 为')
@@ -73,8 +75,9 @@ class PageClass {
       this.lifttimes.start.call(this)
       this.ast = html2Ast(this, this.currEl.outerHTML.replace(/\n/g, ''))
       console.warn('html 解析成语法树')
+
       console.log(this.ast)
-      depMap(this, this.ast)
+      genDepMap(this, this.ast)
       this.currRecordPath = null
       this.currRecordType = null
       this.currObsData = null
@@ -109,18 +112,29 @@ class PageClass {
         p ++
       }
       if (this.depForMap.has(key)) {
+         console.log(this.depForMap)
+        // 处理 for
         node.innerHTML = ''
-        this._s(this, this.depForMap.get(key).template, this.data.list, 'list', key)
-        this.depForMap.get(key).doms.forEach(dom => {
-          node.appendChild(dom)
-        })
+
+        const data = JSON.parse(this.fetchData(this.data, this.depForMap.get(key).source ))
+        const template = this.depForMap.get(key).template
+
+        let fullTemplate = ''
+        for (let i = 0; i < data.length; i++) {
+          fullTemplate += this.replaceTemplateVariable(this, template, 'item', `list[${i}]`)
+        }
+        fullTemplate = `<div>${fullTemplate}</div>`
+        const ast = html2Ast(this, fullTemplate, path)
+        const doms = this.ast2Dom(ast)
+        node.replaceWith(doms)
+       
       } else if (this.depIfMap.has(key)) {
-        const show = this.fetchData(this.data, `{{${this.depIfMap.get(key).condition}}}`) != 'false'
+        // 处理 if
+        const show = this.fetchData(this.data, this.depIfMap.get(key).condition) != 'false'
         if (show) {
           // console.error('显示元素')
-          const range = document.createRange()
-          const fragment = range.createContextualFragment(this.depIfMap.get(key).template)
-          node.appendChild(fragment)
+          const ifNode = this.ast2Dom(this.depIfMap.get(key).ast)
+          node.replaceWith(ifNode)
         } else {
           // console.error('隐藏元素')
           node.innerHTML = ''
@@ -209,6 +223,36 @@ class PageClass {
     })
     return map
   }
+
+  /**
+   * 由缓存的 ast 转为 dom
+   * @param {Object} ast if 或者 for map 存储的 ast
+   * @returns 
+   */
+  ast2Dom(ast) {
+    const nodeTag = ast.tag
+    // 没有标签名，是文本节点，此时先去取值，然后创建文本节点返回
+    // 现在没有处理标签属性
+    if (!nodeTag) {
+      const text = this.fetchData(this.data, ast.text)
+      return document.createTextNode(text)
+    }
+    const node = document.createElement(nodeTag)
+    ast.children.forEach(child => {
+      node.appendChild(this.ast2Dom(child))
+    })
+    return node
+  }
+
+  replaceTemplateVariable(page, str, oldVar, newVar) {
+  const regex = new RegExp(`\\{\\{\\s*([^}]*?\\b${oldVar}\\b[^}]*?)\\s*\\}\\}`, 'g');
+  return str.replace(regex, (match, expr) => {
+    // 只替换变量名，不影响运算符和其他内容
+    const replacedExpr = expr.replace(new RegExp(`\\b${oldVar}\\b`, 'g'), newVar)
+    // return page.fetchData(page.data, `{{ ${replacedExpr} }}`);
+    return `{{ ${replacedExpr} }}`
+  })
+}
 }
 
 export default PageClass

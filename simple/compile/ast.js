@@ -17,7 +17,7 @@ const comment = /^<!--[\s\S]*?-->/
 const selfClosingTags = ['input', 'img', 'br', 'hr', 'meta', 'link']
 
 
-export default function html2Ast(page, html) {
+export default function html2Ast(page, html, rootPath = '') {
 
   let stack = []  // 存放当前正在处理的节点
   let root  // ast 根节点
@@ -70,12 +70,12 @@ export default function html2Ast(page, html) {
 
     if (!root) {
       root = node
-      node.path = ''
+      node.path = rootPath
     }
 
     if (currParent) {
       node.parents = currParent
-      node.path = `${currParent.path}${currParent.path ? '_' : ''}${currParent.children.length}`
+      node.path = genPath('tag')
       currParent.children.push(node)
     }
 
@@ -100,7 +100,7 @@ export default function html2Ast(page, html) {
 
     const textNode = {
       text: orangialText,
-      path: currParent.path,
+      path: genPath('text'),
       parent: currParent
     }
     
@@ -109,6 +109,15 @@ export default function html2Ast(page, html) {
 
   function forword(n) {
     html = html.substring(n)
+  }
+
+  function genPath(type) {
+    const basePath = `${currParent.path}`
+    if (type === 'text') {
+      return basePath
+    } else if (type === 'tag') {
+      return `${basePath}${currParent.path ? '_' : ''}${currParent.children.length}`
+    }
   }
 
   while (html) {
@@ -122,10 +131,10 @@ export default function html2Ast(page, html) {
     if (startTagMatch) {
       let { tag, attrs, isSelfClosing } = startTagMatch
       if (tag === 'for') {
-        const path = `${currParent.path}${currParent.path ? '_' : ''}${currParent.children.length}`
+        const path = genPath('tag')
         html = handleFor(page, html, attrs, path)
       } else if (tag === 'if') {
-        const path = `${currParent.path}${currParent.path ? '_' : ''}${currParent.children.length}`
+        const path = genPath('tag')
         html = handleIf(page, html, attrs, path)
       } else {
         startTagHandler(tag, attrs, isSelfClosing)
@@ -177,35 +186,27 @@ function handleFor (page, html, attrs, path) {
   return html
 }
 
-function _s(page, elem, data, name, path) {
-  let doms = []
-  const range = document.createRange()
-  for (let i = 0; i < data.length; i++) {
-  const domStr = replaceTemplateVariable(page, elem, 'item', `${name}[${i}]`)
-  const fragment = range.createContextualFragment(domStr)
+// 只负责记录，不负责控制
+function _s(page, template, data, name, path) {
+  // let doms = []
   
-  // 将 fragment 中的所有子节点添加到数组中
-  while (fragment.firstChild) {
-    doms.push(fragment.firstChild)
-    // 将节点从 fragment 中移除，避免重复添加
-    fragment.removeChild(fragment.firstChild)
-  }
-}
+  
   page.depForMap.set(path, {
-    doms: doms,
-    template: elem
+    // doms: doms,
+    source: "{{ list }}",
+    template: template,
   })
-  doms = null
+  // doms = null
 }
 
-function replaceTemplateVariable(page, str, oldVar, newVar) {
-  const regex = new RegExp(`\\{\\{\\s*([^}]*?\\b${oldVar}\\b[^}]*?)\\s*\\}\\}`, 'g');
-  return str.replace(regex, (match, expr) => {
-    // 只替换变量名，不影响运算符和其他内容
-    const replacedExpr = expr.replace(new RegExp(`\\b${oldVar}\\b`, 'g'), newVar);
-    return page.fetchData(page.data, `{{ ${replacedExpr} }}`);
-  });
-}
+
+
+
+/**
+ * 对于 if 标签
+ * 1. 解析其中的内容拿出来
+ * 2. 在 if 的 map 中保存 if 标签内元素的模版(最外层包裹 div 标签，到时候直接元素替换)
+ */
 
 function handleIf(page, html, attrs, path) {
   const ifTag = new RegExp(`<\\/if[^>]*>`)
@@ -223,9 +224,13 @@ function handleIf(page, html, attrs, path) {
   return html
 }
 
-function _f(page, elem, path) {
+// 只负责记录，不负责控制
+function _f(page, template, path) {
+  template = `<div>${template}</div>`
+  const ast = html2Ast(page, template, path)
   page.depIfMap.set(path, {
-    template: elem,
-    condition: 'show'
+    template: template,
+    condition: '{{ show }}',
+    ast: ast
   })
 }

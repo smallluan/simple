@@ -1,27 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
 </head>
+
 <body>
   <div id="app">
     <div>
       <h1>数据{{ count }}秒后发生变化</h1>
       <if source="show">
-        <div>看见我了吗？</div>
+        <div>大家好</div>
+        <div>我是{{ number + 1 }}</div>
+        <div>{{ count }}</div>
+        <div>{{ list[0].value.age }}</div>
       </if>
       <h1>{{ fullName }}</h1>
     </div>
     <div>{{ list[0].value.age + 100 }}</div>
     <h1>{{ number }}</h1>
     <for sorce="list">
-      <div>
-        <span>我是:</span><span>{{ item.value.name }}</span>
-        <span style="color: red;">我今年{{ item.value.age }}岁</span>
-      </div>
+      <div>{{ number }}</div>
+      <span>我是:</span><span>{{ item.value.name }}</span>
+      <span style="color: red;">我今年{{ item.value.age }}岁</span>
     </for>
   </div>
 </body>
+
 </html>

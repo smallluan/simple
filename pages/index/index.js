@@ -6,7 +6,7 @@ Page({
     firstName: '张',
     lastName: '伟',
     number: 0,
-    count: 10,
+    count: 5,
     timer: null,
     show: false,
     list: [
@@ -58,9 +58,10 @@ Page({
         this.data.list[0].value.age = 10000
         this.data.list.shift()
         this.data.show = true
-      }, 10000)
+      }, 5000)
       setTimeout(() => {
         clearInterval(this.data.timer)
+        this.data.show = false
         this.data.list.push({
           id: 4,
           value: {
@@ -68,7 +69,7 @@ Page({
             age: 40
           }
         })
-      }, 15000)
+      }, 10000)
     },
     update() {
       console.warn('生命周期 - update')
