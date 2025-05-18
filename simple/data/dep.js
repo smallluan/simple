@@ -1,6 +1,6 @@
 const reg = /\{\{([^}]+)\}\}/g
 
-export default function depMap (page, ast) {
+export default function genDepMap (page, ast) {
   page.dep = dep
   let node = ast
   let queue = [...node.children]
