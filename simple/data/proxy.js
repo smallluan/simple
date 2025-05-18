@@ -17,11 +17,11 @@ export default function proxyData(page, data, parentPath = '') {
       if (p.isInitObs) {
         if (!p.depComp.has(topLevelKey)) {
           p.depComp.set(topLevelKey, [{
-            data: p.currObsData,
-            fn: p.currObsFn
+            data: p.currCompData,
+            fn: p.currCompFn
           }])
         } else {
-          p.depComp.get(topLevelKey).push(p.currObsData)
+          p.depComp.get(topLevelKey).push(p.currCompData)
         }
       }
 

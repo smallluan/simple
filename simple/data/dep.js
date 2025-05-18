@@ -17,19 +17,31 @@ export default function genDepMap (page, ast) {
       const parseRes = page.fetchData(page.data, text)  // 在这里无意义取值一次，后面要优化
     }
     if (attrs && attrs.length) {
+      console.error(1)
+      console.log(attrs)
       attrs.forEach(item => {
         if (reg.test(item.value)) {
-          reg.lastIndex = 0;
+          reg.lastIndex = 0
           page.currRecordType = 'attr'
           page.template = item.value
           page.keyName = item.name
           if (item.name.startsWith('@')) {
+            let matchRes = reg.exec(item.value)
+            reg.lastIndex = 0
             // 收集方法
-            page.depFuncMap.set(path, {
-              type: item.name.slice(1),
-              func: reg.exec(item.value)[1].trim()
-            })
-            // page.depMap.set()
+            console.error(1)
+            console.log(item)
+            if (page.depFuncMap.has(path)) {
+              page.depFuncMap.get(path).push({
+                type: item.name.slice(1),
+                func: matchRes[1].trim()
+              })
+            } else {
+                page.depFuncMap.set(path, [{
+                type: item.name.slice(1),
+                func: matchRes[1].trim()
+              }])
+            }
           } else {
             const parseRes = page.fetchData(page.data, item.value)
           }
