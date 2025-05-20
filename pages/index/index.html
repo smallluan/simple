@@ -1,17 +1,106 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <title>Simple 轻量级前端框架</title>
 </head>
 
 <body>
-  <div id="app">
-    <button @click="{{ incNumber }}" @mouseenter="{{ incNumber }}">click!</button>
-    <div>{{ fullName }}</div>
-    <div>{{ fullNumber }}</div>
+  <div id="app" style="opacity: 0;">
+    <div class="container"></div>
+    <div class="page-area">
+      <div class="title-1">📖 什么是 Simple？</div>
+      <div class="introduce ">{{ introduce }}</div>
+      <div class="title-1">📖 为什么选择 Simple？</div>
+      <div class="wrapper feature-wrapper">
+        <for source="featureList">
+          <div class="feature-item-wrapper">
+            <span class="main-title">{{ item.mainTitle }}</span>
+            <span class="sub-title">{{ item.subTitle }}</span>
+          </div>
+        </for>
+      </div>
+      <div class="title-2">响应式数据 🔄</div>
+      <div class="flex flex-just-con-between">
+        <div class="list-item-1-left wrapper">
+          <for source="responsiveDataText">
+            <div style="line-height: 35px; font-size: 12px;">{{ item }}</div>
+          </for>
+        </div>
+        <div class="list-item-1-right wrapper flex flex-c flex-just-con-around">
+          <div style="font-size: 12px;color: white">👇 Click it !</div>
+          <div class="flex flex-just-con-between">
+            <button @click="{{ dec }}">- 1</button>
+            <div class="number-wrapper flex flex-just-con-around">{{ number }}</div>
+            <button @click="{{ inc }}">+ 1</button>
+          </div>
+          <div style="color: white;" class="flex flex-just-con-between">
+            <div class="number-wrapper flex flex-just-con-around">{{ number }}</div>
+            <span> + </span>
+            <div  class="number-wrapper flex flex-just-con-around">{{ number1 }}</div>
+            <span> = </span>
+            <div  class="number-wrapper flex flex-just-con-around"> {{ numberRes }}</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="title-2">开发更简单 💻</div>
+      <div class="flex flex-just-con-between">
+        <div class="list-item-3-left flex flex-c flex-just-con-between">
+          <div class="top wrapper">
+            <div class="text">您已经向上滑动了</div>
+            <div class="flex flex-just-con-end flex-align-item-center">
+              <span class="value">{{ scrollTop.toFixed(2) }}</span>
+              <span class="text">px</span>
+            </div>
+          </div>
+          <div class="bottom wrapper">
+            <div class="text">您在该网站停留了</div>
+            <div class="flex flex-just-con-end flex-align-item-center">
+              <span class="value">{{ count }}</span>
+              <span class="text">秒</span>
+            </div>
+          </div>
+        </div>
+        <div class="list-item-3-right wrapper">
+          <for source="goodnessList">
+            <div style="font-size: 12px;line-height: 35px;">{{ item.a }}</div>
+          </for>
+        </div>
+      </div>
+      <div class="title-2">更新更高效 ⚡️</div>
+      <div style="position: relative;overflow: hidden;" class="wrapper flex flex-just-con-between flex-align-item-center">
+        <div>
+          <div class="margin-bottom-12 color-white font-14 font-bold">深度路径 📌</div>
+          <div class="font-12 color-white margin-bottom-12">编译时获取模版，为元素生成唯一从根部可达路径</div>
+          <div class="margin-bottom-12 color-white font-14 font-bold">靶向更新 🎯</div>
+          <div class="font-12 color-white ">精准定位，基于深度路径直接找到元素进行更新</div>
+        </div>
+        <img class="target-img" src="../../images/target.png" alt="">
+      </div>
+      
+      <!-- <div class="title-2">风格更简明 💨</div> -->
+    </div>
+    <!-- <if condition="{{ showModule }}">
+      <div class="mask">
+        <div class="module">
+          <div class="tip-title">提示</div>
+          <div class="tip">数字的范围是 0~9 哦，再点也是没用哒！</div>
+          <button @click="{{ toggleShowModule }}">我知道了</button>
+        </div>
+      </div>
+    </if> -->
+    <if condition="{{ showDuration }}">
+      <div class="mask">
+        <div class="module">
+          <div class="tip-title">🎉 wow！</div>
+          <div class="tip">Simple 框架本次初渲染用时 {{ duration.toFixed(2) }} ms !</div>
+          <button @click="{{ toggleShowDuration }}">太棒了</button>
+        </div>
+      </div>
+    </if>
   </div>
 </body>
 

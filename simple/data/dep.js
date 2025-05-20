@@ -17,8 +17,6 @@ export default function genDepMap (page, ast) {
       const parseRes = page.fetchData(page.data, text)  // 在这里无意义取值一次，后面要优化
     }
     if (attrs && attrs.length) {
-      console.error(1)
-      console.log(attrs)
       attrs.forEach(item => {
         if (reg.test(item.value)) {
           reg.lastIndex = 0
@@ -29,8 +27,6 @@ export default function genDepMap (page, ast) {
             let matchRes = reg.exec(item.value)
             reg.lastIndex = 0
             // 收集方法
-            console.error(1)
-            console.log(item)
             if (page.depFuncMap.has(path)) {
               page.depFuncMap.get(path).push({
                 type: item.name.slice(1),

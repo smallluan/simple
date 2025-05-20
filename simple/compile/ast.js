@@ -168,8 +168,13 @@ export default function html2Ast(page, html, rootPath = '') {
 }
 
 function handleFor (page, html, attrs, path) {
-  const sourceData = page.data['list']
-  const sourceDataName = 'list'
+  let source
+  for (let i of attrs) {
+    if (i.name === 'source') {
+      source = i.value
+    }
+  }
+  const sourceDataName = source
   const forTag = new RegExp(`<\\/for[^>]*>`)
   const forEndTag = html.match(forTag)
   let forInnerHtml = html.slice(0, forEndTag.index)
@@ -178,25 +183,21 @@ function handleFor (page, html, attrs, path) {
   html = html.substring(whiteSpace[0].length)
   whiteSpace = forInnerHtml.match(/^\s*/)
   forInnerHtml = forInnerHtml.substring(whiteSpace[0].length)
+
   // 占位元素与变量，保证首次更新，for标签被正确加入待更新序列
-  html = `<div source = "{{ list }}"></div>${html}`
+  html = `<div source = "{{ ${source} }}"></div>${html}`
   page._s = _s
-  _s(page, forInnerHtml, sourceData, sourceDataName, path)
+  _s(page, forInnerHtml, sourceDataName, path)
 
   return html
 }
 
 // 只负责记录，不负责控制
-function _s(page, template, data, name, path) {
-  // let doms = []
-  
-  
+function _s(page, template, source, path) {
   page.depForMap.set(path, {
-    // doms: doms,
-    source: "{{ list }}",
+    source: source,
     template: template,
   })
-  // doms = null
 }
 
 
@@ -209,6 +210,13 @@ function _s(page, template, data, name, path) {
  */
 
 function handleIf(page, html, attrs, path) {
+  let source
+  for (let i of attrs) {
+    if (i.name === 'condition') {
+      source = i.value
+    }
+  }
+  const condition = source
   const ifTag = new RegExp(`<\\/if[^>]*>`)
   const ifEndTag = html.match(ifTag)
   let ifInnerHtml = html.slice(0, ifEndTag.index)
@@ -218,19 +226,20 @@ function handleIf(page, html, attrs, path) {
   whiteSpace = ifInnerHtml.match(/^\s*/)
   ifInnerHtml = ifInnerHtml.substring(whiteSpace[0].length)
   // 占位元素与变量，保证首次更新，for标签被正确加入待更新序列
-  html = `<div source = "{{ show }}"></div>${html}`
+  html = `<div source = "${condition}"></div>${html}`
   page._f = _f
-  _f(page, ifInnerHtml, path)
+  _f(page, ifInnerHtml, condition, path)
   return html
 }
 
 // 只负责记录，不负责控制
-function _f(page, template, path) {
+function _f(page, template, condition, path) {
   template = `<div>${template}</div>`
   const ast = html2Ast(page, template, path)
+  page.genDepMap(page, ast)
   page.depIfMap.set(path, {
     template: template,
-    condition: '{{ show }}',
+    condition: condition,
     ast: ast
   })
 }

@@ -80,38 +80,45 @@ class PageClass {
 
     document.addEventListener('DOMContentLoaded', () => {
       this.currEl = document.getElementById('app')
-      console.warn('原始 dom 为')
-      console.log(this.currEl)
+      // console.warn('原始 dom 为')
+      // console.log(this.currEl)
       if (!this.currEl) {
         throw new Error('未找到 id = app 的元素')
       }
       this.lifttimes.start.call(this, this.data)
       this.ast = html2Ast(this, this.currEl.outerHTML.replace(/\n/g, ''))
-      console.warn('html 解析成语法树')
+      // console.warn('html 解析成语法树')
 
-      console.log(this.ast)
+      // console.log(this.ast)
       genDepMap(this, this.ast)
       this.currRecordPath = null
       this.currRecordType = null
       this.currCompData = null
       this.currCompFn = null
-      console.warn('变量路径依赖收集完毕')
-      console.log(this.depMap)
+      // console.warn('变量路径依赖收集完毕')
+      // console.log(this.depMap)
       // 触发一次初始化更新
       this.update(new Set(this.depMap.keys()))
-      this.lifttimes.loaded.call(this, this.data)
-      console.log(this.depFuncMap)
+      // console.log(this.depFuncMap)
       this.bindFunc()
+      // 绑定页面滚动事件
+      window.onscroll = () => {
+        let scrollTop = document.documentElement.scrollTop || document.body.scrollTop
+        this.pageScroll.call(this, scrollTop)
+      }
+      // 显示页面元素
+      this.currEl.style.opacity = '1'
+      this.lifttimes.loaded.call(this, this.data)
     })
   }
 
   update(pendingupdateData) {
     if (!pendingupdateData.size) return
     this.lifttimes.update.call(this)
-    console.warn('待更新的变量为')
-    console.log(pendingupdateData)
+    // console.warn('待更新的变量为')
+    // console.log(pendingupdateData)
     const path2ValueMap = this.genPath2ValueMap(pendingupdateData)
-    console.log(path2ValueMap)
+    // console.log(path2ValueMap)
     this.pendingupdateData.clear()
     requestAnimationFrame(() => this.render(path2ValueMap))
   }
@@ -127,16 +134,16 @@ class PageClass {
         p ++
       }
       if (this.depForMap.has(key)) {
-         console.log(this.depForMap)
+        //  console.log(this.depForMap)
         // 处理 for
         node.innerHTML = ''
 
-        const data = JSON.parse(this.fetchData(this.data, this.depForMap.get(key).source ))
+        const data = JSON.parse(this.fetchData(this.data, `{{${this.depForMap.get(key).source}}}` ))
         const template = this.depForMap.get(key).template
 
         let fullTemplate = ''
         for (let i = 0; i < data.length; i++) {
-          fullTemplate += this.replaceTemplateVariable(this, template, 'item', `list[${i}]`)
+          fullTemplate += this.replaceTemplateVariable(this, template, 'item', `${this.depForMap.get(key).source}[${i}]`)
         }
         fullTemplate = `<div>${fullTemplate}</div>`
         const ast = html2Ast(this, fullTemplate, path)
@@ -144,12 +151,14 @@ class PageClass {
         node.replaceWith(doms)
        
       } else if (this.depIfMap.has(key)) {
+        // console.log(this.depIfMap.get(key).condition)
         // 处理 if
         const show = this.fetchData(this.data, this.depIfMap.get(key).condition) != 'false'
         if (show) {
           // console.error('显示元素')
           const ifNode = this.ast2Dom(this.depIfMap.get(key).ast)
           node.replaceWith(ifNode)
+          this.bindFunc()
         } else {
           // console.error('隐藏元素')
           node.innerHTML = ''
@@ -258,14 +267,18 @@ class PageClass {
     ast.children.forEach(child => {
       node.appendChild(this.ast2Dom(child))
     })
+    ast.attrs.forEach(attr => {
+      const { name, value } = attr
+      try {
+        node.setAttribute(name, value)
+      } catch(e) {}
+    })
     return node
   }
 
   // 绑定方法
   bindFunc() {
     this.depFuncMap.forEach((value, key) => {
-      console.error(2)
-      console.log(key, value)
       const path = key.split('_')
       let node = this.currEl
       let p = 0
@@ -275,9 +288,17 @@ class PageClass {
       }
       value.forEach(item => {
         const { type, func } = item
-         node.addEventListener(type, (e) => this[func].call(this, e, this.data))
+        const eventKey = `__event_bound_${type}`
+        if (node[eventKey]) {
+          // console.error('已经绑定', type)
+          return
+        }
+        const handler = (e) => this[func].call(this, e, this.data)
+        node.addEventListener(type, handler)
+        node[eventKey] = handler
+        node.removeAttribute(`@${type}`)
       })
-      node.removeAttribute('@click')
+      
     })
   }
 
