@@ -1,4 +1,4 @@
-import html2Ast from "../compile/ast"
+import Html2Ast from "../compile/ast"
 import genDepMap from "../data/dep"
 import proxyData from "../data/proxy"
 
@@ -80,26 +80,26 @@ class PageClass {
 
     document.addEventListener('DOMContentLoaded', () => {
       this.currEl = document.getElementById('app')
-      // console.warn('原始 dom 为')
-      // console.log(this.currEl)
+      console.warn('原始 dom 为')
+      console.log(this.currEl)
       if (!this.currEl) {
         throw new Error('未找到 id = app 的元素')
       }
       this.lifttimes.start.call(this, this.data)
-      this.ast = html2Ast(this, this.currEl.outerHTML.replace(/\n/g, ''))
-      // console.warn('html 解析成语法树')
-
-      // console.log(this.ast)
+      const html = this.currEl.outerHTML.replace(/\n/g, '')
+      this.ast = new Html2Ast(this, html).transform()
+      console.warn('html 解析成语法树')
+      console.log(this.ast)
       genDepMap(this, this.ast)
       this.currRecordPath = null
       this.currRecordType = null
       this.currCompData = null
       this.currCompFn = null
-      // console.warn('变量路径依赖收集完毕')
-      // console.log(this.depMap)
+      console.warn('变量路径依赖收集完毕')
+      console.log(this.depMap)
       // 触发一次初始化更新
       this.update(new Set(this.depMap.keys()))
-      // console.log(this.depFuncMap)
+      console.log(this.depFuncMap)
       this.bindFunc()
       // 绑定页面滚动事件
       window.onscroll = () => {
@@ -115,8 +115,8 @@ class PageClass {
   update(pendingupdateData) {
     if (!pendingupdateData.size) return
     this.lifttimes.update.call(this)
-    // console.warn('待更新的变量为')
-    // console.log(pendingupdateData)
+    console.warn('待更新的变量为')
+    console.log(pendingupdateData)
     const path2ValueMap = this.genPath2ValueMap(pendingupdateData)
     // console.log(path2ValueMap)
     this.pendingupdateData.clear()
@@ -134,7 +134,6 @@ class PageClass {
         p ++
       }
       if (this.depForMap.has(key)) {
-        //  console.log(this.depForMap)
         // 处理 for
         node.innerHTML = ''
 
@@ -146,12 +145,11 @@ class PageClass {
           fullTemplate += this.replaceTemplateVariable(this, template, 'item', `${this.depForMap.get(key).source}[${i}]`)
         }
         fullTemplate = `<div>${fullTemplate}</div>`
-        const ast = html2Ast(this, fullTemplate, path)
+        const ast = new Html2Ast(this, fullTemplate, path).transform()
         const doms = this.ast2Dom(ast)
         node.replaceWith(doms)
        
       } else if (this.depIfMap.has(key)) {
-        // console.log(this.depIfMap.get(key).condition)
         // 处理 if
         const show = this.fetchData(this.data, this.depIfMap.get(key).condition) != 'false'
         if (show) {
