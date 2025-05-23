@@ -1,12 +1,12 @@
 /**
- * 对于 if 标签
- * 1. 解析其中的内容拿出来
- * 2. 在 if 的 map 中保存 if 标签内元素的模版(最外层包裹 div 标签，到时候直接元素替换)
+ * 对于 show 标签
+ * 1. 根元素改为 div 
+ * 2. 将根元素的 visibility 设置为 hidden
  */
 import Html2Ast from "./ast"
 import tagReg from "../reg/tag"
 
-export default function handleIf(page, html, attrs, path) {
+export default function handleShow(page, html, attrs, path) {
   let source
   for (let i of attrs) {
     if (i.name === 'condition') {
@@ -14,28 +14,28 @@ export default function handleIf(page, html, attrs, path) {
     }
   }
   const condition = source
-  const ifTag = tagReg.ifTag
-  const ifEndTag = html.match(ifTag)
-  let ifInnerHtml = html.slice(0, ifEndTag.index)
-  html = html.substring(ifEndTag.index + ifEndTag[0].length)
+  const showTag = tagReg.showTag
+  const showEndTag = html.match(showTag)
+  let showInnerHtml = html.slice(0, showEndTag.index)
+  html = html.substring(showEndTag.index + showEndTag[0].length)
   let whiteSpace = html.match(/^\s*/)
   html = html.substring(whiteSpace[0].length)
-  whiteSpace = ifInnerHtml.match(/^\s*/)
-  ifInnerHtml = ifInnerHtml.substring(whiteSpace[0].length)
+  whiteSpace = showInnerHtml.match(/^\s*/)
+  showInnerHtml = showInnerHtml.substring(whiteSpace[0].length)
   const placeHolder = `<div source = "${condition}"></div>`
   // 占位元素与变量，保证首次更新，for标签被正确加入待更新序列
   html = `${placeHolder}${html}`
-  page._if = _if
-  _if(page, ifInnerHtml, condition, path, placeHolder)
+  page._show = _show
+  _show(page, showInnerHtml, condition, path, placeHolder)
   return html
 }
 
 // 只负责记录，不负责控制
-function _if(page, template, condition, path, placeHolder) {
+function _show(page, template, condition, path, placeHolder) {
   template = `<div>${template}</div>`
   const ast = new Html2Ast(page, template, path).transform()
   page.genDepMap(page, ast)
-  page.depIfMap.set(path, {
+  page.depShowMap.set(path, {
     template: template,
     condition: condition,
     ast: ast,

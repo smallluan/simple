@@ -1,10 +1,17 @@
+import Html2Ast from "./ast"
 import tagReg from '../reg/tag'
 
 export default function handleFor (page, html, attrs, path) {
-  let source
+  let source, itemname = 'item', indexname = 'index'
   for (let i of attrs) {
     if (i.name === 'source') {
       source = i.value
+    }
+    if (i.name === 'itemname') {
+      itemname = i.value
+    }
+    if (i.name === 'indexname') {
+      indexname = i.value
     }
   }
   const sourceDataName = source
@@ -20,15 +27,19 @@ export default function handleFor (page, html, attrs, path) {
   // 占位元素与变量，保证首次更新，for标签被正确加入待更新序列
   html = `<div source = "{{ ${source} }}"></div>${html}`
   page._for = _for
-  _for(page, forInnerHtml, sourceDataName, path)
+  _for(page, forInnerHtml, sourceDataName, itemname, indexname, path)
 
   return html
 }
 
 // 只负责记录，不负责控制
-function _for(page, template, source, path) {
+function _for(page, template, source, itemname, indexname, path) {
+  // const ast = new Html2Ast(page, template, path).transform()
   page.depForMap.set(path, {
     source: source,
+    itemname: itemname,
+    indexname: indexname,
     template: template,
+    // ast: ast
   })
 }

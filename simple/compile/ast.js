@@ -1,5 +1,6 @@
 import handleFor from "./for"
 import handleIf from "./if"
+import handleShow from "./show"
 import tagReg from '../reg/tag'
 
 const selfClosingTags = ['input', 'img', 'br', 'hr', 'meta', 'link']
@@ -23,6 +24,10 @@ export default class Html2Ast {
     this.rootPath = rootPath
   }
 
+  /**
+   * 核心函数 —— 将 html 字符串转为 ast
+   * @returns ast
+   */
   transform() {
     while (this.html) {
       let commentMatch
@@ -40,7 +45,10 @@ export default class Html2Ast {
         } else if (tag === 'if') {
           const path = this.genPath('tag', this.currParent)
           this.html = handleIf(this.page, this.html, attrs, path)
-        } else {
+        } else if (tag === 'show') {
+          const path = this.genPath('tag', this.currParent)
+          this.html = handleShow(this.page, this.html, attrs, path)
+        }  else {
           this.startTagHandler(startTagMatch)
         }
         continue

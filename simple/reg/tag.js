@@ -14,6 +14,8 @@ const startTagColse = /^\s*>/
 const comment = /^<!--[\s\S]*?-->/
 // 匹配 if 标签
 const ifTag = new RegExp(`<\\/if[^>]*>`)
+// 匹配 show 标签
+const showTag = new RegExp(`<\\/show[^>]*>`)
 // 匹配 for 标签
 const forTag = new RegExp(`<\\/for[^>]*>`)
 
@@ -26,5 +28,6 @@ export default {
   startTagColse,
   comment,
   ifTag,
+  showTag,
   forTag
 }

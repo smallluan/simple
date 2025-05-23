@@ -36,8 +36,12 @@ class PageClass {
   depForMap = new Map()
   // if 节点依赖表
   depIfMap = new Map()
+  // show 节点依赖表
+  depShowMap = new Map()
   // func 节点依赖表
   depFuncMap = new Map()
+  // 位于可视区域的事件节点
+  inViewMap = new Map()
   constructor (options) {
     const {
       data = {},
@@ -87,6 +91,7 @@ class PageClass {
       }
       this.lifttimes.start.call(this, this.data)
       const html = this.currEl.outerHTML.replace(/\n/g, '')
+      console.log(html)
       this.ast = new Html2Ast(this, html).transform()
       console.warn('html 解析成语法树')
       console.log(this.ast)
@@ -130,40 +135,75 @@ class PageClass {
       let node = this.currEl
       let p = 0
       while (p < path.length) {
-        node = node.children[Number(path[p])]
+        try {
+           node = node.children[Number(path[p])]
+        } catch {
+          // 这里报错是因为 if 元素
+          // 页面未渲染，但是路径已经被记录
+          break
+        }
         p ++
       }
       if (this.depForMap.has(key)) {
         // 处理 for
         node.innerHTML = ''
-
-        const data = JSON.parse(this.fetchData(this.data, `{{${this.depForMap.get(key).source}}}` ))
-        const template = this.depForMap.get(key).template
+        const forTarget = this.depForMap.get(key)
+        const data = this.data[forTarget.source]
+        const template = forTarget.template
 
         let fullTemplate = ''
         for (let i = 0; i < data.length; i++) {
-          fullTemplate += this.replaceTemplateVariable(this, template, 'item', `${this.depForMap.get(key).source}[${i}]`)
+          fullTemplate += this.replaceTemplateVariable(this, template, forTarget.itemname, `${forTarget.source}[${i}]`)
         }
         fullTemplate = `<div>${fullTemplate}</div>`
-        const ast = new Html2Ast(this, fullTemplate, path).transform()
+        const ast = new Html2Ast(this, fullTemplate, key).transform()
         const doms = this.ast2Dom(ast)
+        genDepMap(this, ast)  // 这样 for 循环的元素也可以绑定事件了
         node.replaceWith(doms)
        
       } else if (this.depIfMap.has(key)) {
         // 处理 if
-        const show = this.fetchData(this.data, this.depIfMap.get(key).condition) != 'false'
+        const show = this.fetchData(this.data, this.depIfMap.get(key).condition) !== 'false'
         if (show) {
-          // console.error('显示元素')
           const ifNode = this.ast2Dom(this.depIfMap.get(key).ast)
           node.replaceWith(ifNode)
           this.bindFunc()
         } else {
-          // console.error('隐藏元素')
+          if (node.tagName === 'IF') {
+            const newParentNode = document.createElement('div')
+            newParentNode.setAttribute('isIfArea', '')
+            node.replaceWith(newParentNode)
+          }
           node.innerHTML = ''
+        }
+      } else if (this.depShowMap.has(key)) {
+        // 如果标签还是 show 则替换成 div 标签
+       if (node.tagName === 'SHOW') {
+          const newParentNode = document.createElement('div')
+          newParentNode.setAttribute('isShowArea', '')
+          const fragment = document.createDocumentFragment()
+          while (node.firstChild) {
+            fragment.appendChild(node.firstChild)
+          }
+          newParentNode.appendChild(fragment)
+          node.replaceWith(newParentNode)
+        }
+        // 拿到条件结果
+        const show = this.fetchData(this.data, this.depShowMap.get(key).condition) !== 'false'
+        if (show) {
+            node.style.visibility = 'visible'
+        } else {
+            node.style.visibility = 'hidden'
         }
       } else {
         if (value.text) {
-          node.innerText = value.text
+          try {
+            node.innerText = value.text
+          } catch {
+            // 这里报错是因为 if 元素
+            // 页面未渲染，但是路径已经被记录
+          }
+
         }
         value.attrs.forEach(attr => {
           node[attr.keyName] = attr.value
@@ -281,7 +321,11 @@ class PageClass {
       let node = this.currEl
       let p = 0
       while (p < path.length) {
-        node = node.children[Number(path[p])]
+        try {
+          node = node.children[Number(path[p])]
+        } catch (e) {
+          console.error(e)
+        }
         p ++
       }
       value.forEach(item => {

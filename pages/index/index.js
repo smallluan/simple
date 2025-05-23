@@ -7,7 +7,7 @@ Page({
    number: 0,
    number1: 10,
    showModule: false,
-   showDuration: true,
+   showDuration: false,
    startTime: performance.now(),
    endTime: 0,
    duration: 0,
@@ -37,35 +37,39 @@ Page({
    ],
    goodnessList: [
     {
-      a: '✅ 多文件，更清晰'
+      a: '✅ 多文件编码'
     },
     {
-      a: '✅ 内置组件，无需引入'
+      a: '✅ 内置组件'
     },
     {
       a: '✅ 响应式布局'
     },
-   ]
+   ],
+   list1: [{ a: 1, aitemb: 2 }],
+   list2: [5, 6, 7, 8]
   },
 
   // 生命周期
   lifttimes: {
     start() {
       // console.warn('生命周期 - start')
-
     },
     loaded(data) {
       console.warn('生命周期 - loaded')
       data.endTimer = performance.now()
       data.duration = Math.abs(data.endTime - data.startTime)
-      let timer = setInterval(() => {
-        if (data.count >= 10000) {
-          data.count = '10000+'
-          clearInterval(timer)
-        } else {
-          data.count ++
-        }
+      setTimeout(() => {
+        data.showDuration = true
       }, 1000)
+      // let timer = setInterval(() => {
+      //   if (data.count >= 10000) {
+      //     data.count = '10000+'
+      //     clearInterval(timer)
+      //   } else {
+      //     data.count ++
+      //   }
+      // }, 1000)
     },
     update() {
       console.warn('生命周期 - update')

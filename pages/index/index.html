@@ -8,12 +8,13 @@
 </head>
 
 <body>
+  <script type="module" src="../../simple/components/button.js" ></script>
   <div id="app" style="opacity: 0;">
     <div class="container"></div>
     <div class="page-area">
-      <div class="title-1">📖 什么是 Simple？</div>
-      <div class="introduce ">{{ introduce }}</div>
-      <div class="title-1">📖 为什么选择 Simple？</div>
+      <!-- <div class="title-1">📖 什么是 Simple？</div>
+      <div class="introduce ">{{ introduce }}</div> -->
+      <div inview class="title-1">📖 为什么选择 Simple？</div>
       <div class="wrapper feature-wrapper">
         <for source="featureList">
           <div class="feature-item-wrapper">
@@ -32,9 +33,9 @@
         <div class="list-item-1-right wrapper flex flex-c flex-just-con-around">
           <div style="font-size: 12px;color: white">👇 Click it !</div>
           <div class="flex flex-just-con-between">
-            <button @click="{{ dec }}">- 1</button>
+            <m-button @click="{{ dec }}">- 1</m-button>
             <div class="number-wrapper flex flex-just-con-around">{{ number }}</div>
-            <button @click="{{ inc }}">+ 1</button>
+            <m-button @click="{{ inc }}">+ 1</m-button>
           </div>
           <div style="color: white;" class="flex flex-just-con-between">
             <div class="number-wrapper flex flex-just-con-around">{{ number }}</div>
@@ -81,22 +82,14 @@
         <img class="target-img" src="../../images/target.png" alt="">
       </div>
       
-      <!-- <div class="title-2">风格更简明 💨</div> -->
-    </div>
-    <!-- <if condition="{{ showModule }}">
-      <div class="mask">
-        <div class="module">
-          <div class="tip-title">提示</div>
-          <div class="tip">数字的范围是 0~9 哦，再点也是没用哒！</div>
-          <button @click="{{ toggleShowModule }}">我知道了</button>
-        </div>
-      </div>
-    </if> -->
+      <div class="title-2">风格更简明 💨</div>
+
     <if condition="{{ showDuration }}">
       <div class="mask">
         <div class="module">
-          <div class="tip-title">🎉 wow！</div>
+          <div class="tip-title">🎉 wow!!</div>
           <div class="tip">Simple 框架本次初渲染用时 {{ duration.toFixed(2) }} ms !</div>
+          <div class="tip">框架正在重构，可能会有波动哦~</div>
           <button @click="{{ toggleShowDuration }}">太棒了</button>
         </div>
       </div>
