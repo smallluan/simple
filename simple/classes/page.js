@@ -52,11 +52,9 @@ class PageClass {
 
     this.lifttimes = lifttimes
 
-    data.__$testData$__  = '我是占位符'
-
     this.isProxy = true
 
-    this.data = proxyData(this, data)
+    this.data = proxyData.call(this, data)
 
     this.isProxy = false
 
@@ -71,7 +69,7 @@ class PageClass {
       if (!data.hasOwnProperty(key)) {
         this.currCompData = key
         this.currCompFn = observers[key]
-        this.data[key] = proxyData(this, observers[key](this.data))
+        this.data[key] = proxyData.call(this, observers[key](this.data))
       } else {
         // 观察者
         this.depObsMap.set(key, observers[key])
@@ -123,7 +121,8 @@ class PageClass {
     console.warn('待更新的变量为')
     console.log(pendingupdateData)
     const path2ValueMap = this.genPath2ValueMap(pendingupdateData)
-    // console.log(path2ValueMap)
+    console.warn('路径值信息')
+    console.log(path2ValueMap)
     this.pendingupdateData.clear()
     requestAnimationFrame(() => this.render(path2ValueMap))
   }

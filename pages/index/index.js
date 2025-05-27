@@ -1,6 +1,6 @@
 import Page from "../../simple"
 
-Page({
+window.page =Page({
   // 数据部分
   data: {
    scrollTop: 0,
@@ -61,7 +61,7 @@ Page({
       data.duration = Math.abs(data.endTime - data.startTime)
       setTimeout(() => {
         data.showDuration = true
-      }, 1000)
+      }, 1500)
       // let timer = setInterval(() => {
       //   if (data.count >= 10000) {
       //     data.count = '10000+'
